@@ -1,0 +1,17 @@
+spring:
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.jdbc.Driver
+    # 在 URL 中添加 useSSL=false 参数
+    url: jdbc:mysql://localhost:3306/novel?useSSL=false
+    username: root
+    password: 123456
+
+  web:
+    resources:
+      static-locations: file:./uploads/,classpath:/static/
+  security:
+    user:
+      name: user
+      password: 2004224@abc
+      roles: USER
