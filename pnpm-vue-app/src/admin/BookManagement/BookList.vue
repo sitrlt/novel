@@ -117,11 +117,16 @@
             value-format="YYYY-MM-DD">
         </el-date-picker>
       </el-form-item>
-      <el-form-item label="出版社id" :label-width="100">
-        <el-input v-model="tableform.publisherId" autocomplete="off"/>
-      </el-form-item>
-      <el-form-item label="类型id" :label-width="100">
-        <el-input v-model="tableform.typeId" autocomplete="off"/>
+      <el-form-item label="出版社" :label-width="100">
+        <el-select v-model="tableform.publisherId" placeholder="请选择出版社">
+          <el-option
+              v-for="publisher in publishers"
+              :key="publisher.id"
+              :label="publisher.name"
+              :value="publisher.id"
+          >
+          </el-option>
+        </el-select>
       </el-form-item>
     </el-form>
     <template #footer>
@@ -187,8 +192,16 @@ let dialogType = ref('add')//初始化弹窗类型为增加弹窗
 const dialogTitle = computed(() => {//设置弹窗的标题
   return dialogType.value === 'add' ? '新增数据' : '编辑数据'
 })
-const publisherNames = ref([]);
+const publishers = ref([]);
 
+const getPublisher = () => {
+  axios.get("http://localhost:8080/publishers/findAll").then((response) => {
+    publishers.value = response.data;
+  }).catch((error) => {
+    console.error("请求出错:", error);
+    // 处理错误，例如显示错误信息或采取其他措施
+  })
+}
 
 /*
 
@@ -261,6 +274,7 @@ const uploadFile = () => {
 // 监听数据变化
 onMounted(() => {
   getData();
+  getPublisher();
 })
 
 // 监听sex属性的变化，并更新表单

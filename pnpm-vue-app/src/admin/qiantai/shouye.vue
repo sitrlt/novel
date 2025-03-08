@@ -84,8 +84,6 @@ import {Search, View} from '@element-plus/icons-vue'
 import {ElIcon, ElInput, ElMessage} from 'element-plus';
 import axios from "axios";
 import router from "../../router.js";
-
-
 const carouselItems = ref([
   {
 
@@ -376,6 +374,6 @@ onUnmounted(() => {
 
 .recommend-genre {
   margin-right: 5px;
-  color: #c81623;
+  color: #f8bbd0;
 }
 </style>

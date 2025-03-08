@@ -16,13 +16,12 @@ public interface ReaderMapper extends BaseMapper<Reader> {
     Reader selectByPhone(@Param("phone") String phone);
     @Update("UPDATE reader SET cover_image = #{coverImage} WHERE id = #{id}")
     void updateCoverImagePath(Long id, String coverImagePath);
-    @Insert("INSERT INTO reader (username, password, phone, cover_image,registration_date) " +
-            "VALUES (#{username}, #{password}, #{phone}, #{coverImage},#{registrationDate});")
+    @Insert("INSERT INTO reader (username, password, phone, cover_image) " +
+            "VALUES (#{username}, #{password}, #{phone}, #{coverImage});")
     void insertReader(@Param("username") String username,
                       @Param("password") String password,
                       @Param("phone") String phone,
-                      @Param("coverImage") String coverImage,
-                      @Param("registrationDate")String registrationDate);
+                      @Param("coverImage") String coverImage);
     @Update("UPDATE reader SET ${field} = #{value} WHERE id = #{id}")
     int updateReader(@Param("field") String field, @Param("value") String value, @Param("id") int id);
     @Update("UPDATE reader SET cover_image = #{coverImage} WHERE id = #{id}")

@@ -64,7 +64,8 @@
             text: '借阅管理',
             icon: 'Medal',
             children: [
-                {text: '借阅管理',icon: 'Watch',path: '/a1/l6'},
+                {text: '实体书借阅',icon: 'Watch',path: '/a1/l6'},
+                {text: '电子书借阅',icon: 'Watch',path: '/a1/l8'},
             ]
         },
         {

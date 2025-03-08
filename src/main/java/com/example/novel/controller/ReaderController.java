@@ -196,10 +196,9 @@ public class ReaderController {
     public ResponseEntity<String> register(@RequestParam String username,
                                            @RequestParam String password,
                                            @RequestParam String phone,
-                                           @RequestParam String coverImage,
-                                           @RequestParam String registrationDate) {
+                                           @RequestParam String coverImage) {
         try {
-            readerMapper.insertReader(username, password, phone, coverImage,registrationDate);
+            readerMapper.insertReader(username, password, phone, coverImage);
             return ResponseEntity.ok("注册成功！");
         } catch (Exception e) {
             e.printStackTrace();

@@ -14,11 +14,12 @@
   <el-table :data="displayedItems"
             :header-cell-style="{ background: '#f8bbd0',color:'white'}"
             empty-text="暂无数据"
+            header-align="center"
+
             @selection-change="handleSelectionChange"
             @sort-change="handleSortChange"
             border
-            style="width: 98%"
-  >
+            style="width: 98%">
     <el-table-column type="selection"/>
     <el-table-column prop="id" label="序号" width="100" ></el-table-column>
     <el-table-column prop="reader.username" label="昵称" width="100" ></el-table-column>
@@ -26,29 +27,20 @@
     <el-table-column prop="borrowDate" label="借阅日期" width="120"></el-table-column>
     <el-table-column prop="dueDate" label="应还日期" width="150"> </el-table-column>
     <el-table-column prop="returnDate" label="归还日期" width="120"> </el-table-column>
-    <el-table-column prop="bookInventory.availableCopies" label="可借数量" width="120"> </el-table-column>
     <el-table-column prop="bookInventory.totalCopies" label="总数量" width="120"> </el-table-column>
+    <el-table-column prop="bookInventory.availableCopies" label="可借数量" width="120"> </el-table-column>
     <el-table-column prop="status" label="状态" width="120"> </el-table-column>
-    <el-table-column prop="book.ebook" label="isEbook" width="120"> </el-table-column>
-    <el-table-column label="操作" min-width="350">
+   <el-table-column label="操作" min-width="350">
       <template #default="{ row }">
         <el-button
-            type="primary"
+            :type="row && row.book &&!row.book.ebook && row.status === '待处理'? 'primary' : 'danger'"
             size="small"
-            icon="Star"
+            :icon="row && row.book &&!row.book.ebook && row.status === '待处理'? 'Star' : ''"
             class="custom-pink-button"
-            @click="checkInventoryAndBorrow(row)"
-            v-if="row && row.book &&!row.book.ebook&&row.status === '待处理'"
+            @click="row && row.book &&!row.book.ebook && row.status === '待处理'? checkInventoryAndBorrow(row) : rejectBorrowRequest(row)"
+            v-if="(row && row.book &&!row.book.ebook && row.status === '待处理') || row.status === '已逾期'"
         >
-          同意借阅
-        </el-button>
-        <el-button
-            type="danger"
-            size="small"
-            @click="rejectBorrowRequest(row)"
-            v-if="row.status === '已逾期'"
-        >
-          拒绝借阅
+          {{ row && row.book &&!row.book.ebook && row.status === '待处理'? '同意借阅' : '拒绝借阅' }}
         </el-button>
         <el-button type="danger" size="small" icon="Delete"
                    @click="onDelete(row)">删除
@@ -93,7 +85,7 @@ const publisherNames = ref([]);
 
 
 // 发送请求获取数据
-axios.get("http://localhost:8080/borrowRecord/findAll").then((response) => {
+axios.get("http://localhost:8080/physicalBorrowRecord/findAll").then((response) => {
   members = response.data;
   total.value =members.length;
   displayedItems.value = members; // 更新ref变量的值\
@@ -111,8 +103,10 @@ watch(tableform.value.sex, (newVal) => {
 });
 
 //获取当前页数据
+const filteredItems = ref()
+
 const getData = () => {
-  axios.get(`http://localhost:8080/borrowRecord/findByPage`, {
+  axios.get(`http://localhost:8080/physicalBorrowRecord/findByPage`, {
     params: {
       pageNum: currentPage.value,
       pageSize: pageSize.value
@@ -144,6 +138,7 @@ const handleSearchName = (val) => {
     axios.get(`http://localhost:8080/borrowRecord/search`,{params:{keyword:val}}).then(response => {
       displayedItems.value = response.data;
       console.log(displayedItems.value)
+
       ElMessage({type: 'success', message: '查询成功！',})
     }).catch(error => {
       console.error(error);

@@ -65,15 +65,6 @@ const phone = ref('');
 const confirmPassword = ref('');
 
 const errorMessage = ref('');
-// 获取当前时间
-const now = new Date();
-const year = now.getFullYear();
-const month = String(now.getMonth() + 1).padStart(2, '0');
-const day = String(now.getDate()).padStart(2, '0');
-const hours = String(now.getHours()).padStart(2, '0');
-const minutes = String(now.getMinutes()).padStart(2, '0');
-const seconds = String(now.getSeconds()).padStart(2, '0');
-const currentDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 
 const handleSignUp = async () => {
   if (password.value !== confirmPassword.value) {
@@ -87,8 +78,7 @@ const handleSignUp = async () => {
         username: username.value,
         password: password.value,
         phone: phone.value,
-        coverImage: coverImage.value,
-        registrationDate:currentDate
+        coverImage: coverImage.value
       }
     });
 

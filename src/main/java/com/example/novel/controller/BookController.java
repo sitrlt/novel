@@ -149,15 +149,13 @@ public class BookController {
         // 创建分页对象
         Page<Book> pageParam = new Page<>(pageNum, pageSize);
         // 调用 Mapper 方法进行分页查询
-        IPage<Book> bookPage = bookMapper.searchBooks(pageParam, keyword);
+        IPage<Book> bookPage = bookMapper.searchBooks1(pageParam, keyword);
         // 构建返回结果
         Map<String, Object> result = new HashMap<>();
         result.put("records", bookPage.getRecords());
         result.put("total", bookPage.getTotal());
         return result;
     }
-
-
 
 // 根据读者 ID 获取读者信息并设置兴趣标签
    private Reader getReaderById(int readerId) {
@@ -208,5 +206,20 @@ public class BookController {
         }
         return null;
     }
+
+    @GetMapping("/bookAll/total")
+    public BookStatsDto getBookStats() {
+        BookStatsDto stats = new BookStatsDto();
+        // 假设你有对应的 Mapper 方法来获取各项数据
+        stats.setTotal(bookMapper.getTotalBookCount());
+        stats.setBorrowing(bookMapper.getBorrowingBookCount());
+        stats.setBorrowingCount(bookMapper.getBorrowingPersonCount());
+        stats.setReturned(bookMapper.getReturnedBookCount());
+        stats.setReturnedCount(bookMapper.getReturnedPersonCount());
+        stats.setOverdue(bookMapper.getOverdueBookCount());
+        stats.setOverdueCount(bookMapper.getOverduePersonCount());
+        return stats;
+    }
+
 
 }

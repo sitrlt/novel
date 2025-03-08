@@ -80,8 +80,8 @@ const menuData = ref([
     path: '/novel/modern',
   },
   {
-    text: '玄幻仙侠',
-    path: '/fantasy',
+    text: '历史文化',
+    path: '/novel/history',
   }
 ]);
 // 假设已经引入相关依赖

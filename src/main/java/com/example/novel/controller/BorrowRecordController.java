@@ -14,9 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 @RestController
 @CrossOrigin
@@ -41,19 +40,34 @@ public class BorrowRecordController {
             borrowRecordMapper.insertBorrowRecord(borrowRecord);
     }
 
-    @GetMapping("/borrowRecord/findAll")
+    @GetMapping("/physicalBorrowRecord/findAll")
     public List<BorrowRecord> find(){
-        return borrowRecordMapper.selectAllBorrowRecords();
+        return borrowRecordMapper.selectAllPhysicalBorrowRecords();
     }
 
-    @GetMapping("/borrowRecord/findByPage")
+    @GetMapping("/physicalBorrowRecord/findByPage")
     public IPage getBorrowRecordList(@RequestParam("pageNum") Integer pageNum,//使用 @RequestParam 注解来获取请求参数 pageNum 和 pageSize 的值，
                              @RequestParam("pageSize") Integer pageSize) {//分别表示当前页码和每页数据条数
         Page<BorrowRecord> page = new Page<>(pageNum, pageSize);
         QueryWrapper<BorrowRecord> queryWrapper = new QueryWrapper<>();//创建一个 Page 对象，用于分页查询。传入 pageNum 和 pageSize 参数来指定当前页码和每页数据条数
         queryWrapper.orderByDesc("id"); // 根据id字段降序排序
         page.addOrder(OrderItem.desc("id")); // 添加降序排序条件
-        return borrowRecordMapper.selectPageWithBorrowRecord(page,null);
+        return borrowRecordMapper.selectPageWithPhysicalBorrowRecord(page,null);
+    }
+
+    @GetMapping("/EbookBorrowRecord/findAll")
+    public List<BorrowRecord> find1(){
+        return borrowRecordMapper.selectAllEbookBorrowRecords();
+    }
+
+    @GetMapping("/EbookBorrowRecord/findByPage")
+    public IPage getBorrowRecordList1(@RequestParam("pageNum") Integer pageNum,//使用 @RequestParam 注解来获取请求参数 pageNum 和 pageSize 的值，
+                                     @RequestParam("pageSize") Integer pageSize) {//分别表示当前页码和每页数据条数
+        Page<BorrowRecord> page = new Page<>(pageNum, pageSize);
+        QueryWrapper<BorrowRecord> queryWrapper = new QueryWrapper<>();//创建一个 Page 对象，用于分页查询。传入 pageNum 和 pageSize 参数来指定当前页码和每页数据条数
+        queryWrapper.orderByDesc("id"); // 根据id字段降序排序
+        page.addOrder(OrderItem.desc("id")); // 添加降序排序条件
+        return borrowRecordMapper.selectPageWithEbookBorrowRecord(page,null);
     }
 
     //通过id修改信息
@@ -110,5 +124,47 @@ public class BorrowRecordController {
     @GetMapping("/books/ranking")
     public List<Map<String, Object>> getBooksRanking() {
         return borrowRecordMapper.getBooksBorrowCount();
+    }
+
+    // 获取不同书籍的借阅次数统计
+    @GetMapping("/borrow/statistics/book")
+    public Map<String, Integer> getBorrowsByBookTitle() {
+        List<Map<String, Object>> resultList = borrowRecordMapper.countBorrowsByBookTitle();
+        Map<String, Integer> borrowsByBookTitle = new HashMap<>();
+        for (Map<String, Object> result : resultList) {
+            String title = (String) result.get("title");
+            Integer count = ((Long) result.get("borrowCount")).intValue();
+            borrowsByBookTitle.put(title, count);
+        }
+        return borrowsByBookTitle;
+    }
+
+    @GetMapping("/borrow/statistics/reader")
+    public Map<String, Integer> getBorrowsByReaderName() {
+        List<Map<String, Object>> resultList = borrowRecordMapper.countBorrowsByReaderName();
+        Map<String, Integer> borrowsByReaderName = new HashMap<>();
+        for (Map<String, Object> result : resultList) {
+            String username = (String) result.get("username");
+            if (username != null) {
+                Integer count = ((Long) result.get("borrowCount")).intValue();
+                borrowsByReaderName.put(username, count);
+            }
+        }
+        return borrowsByReaderName;
+    }
+
+    // 获取每日的借阅数量统计
+    @GetMapping("/borrow/statistics/day")
+    public Map<String, Integer> getBorrowsByDay() {
+        List<Map<String, Object>> resultList = borrowRecordMapper.countBorrowsByDay();
+        Map<String, Integer> borrowsByDay = new LinkedHashMap<>(); // 使用 LinkedHashMap 以保持插入顺序
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
+        for (Map<String, Object> result : resultList) {
+            String borrowDateStr = result.get("borrowDate").toString();
+            Integer count = ((Number) result.get("borrowCount")).intValue();
+            borrowsByDay.put(borrowDateStr, count);
+        }
+        return borrowsByDay;
     }
 }

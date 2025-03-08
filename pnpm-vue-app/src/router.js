@@ -75,6 +75,11 @@ const routes=[
                 path: '/novel/ranking',
                 name: 'BookRanking',
                 component:()=>import('./admin/qiantai/RankingList.vue')
+            },
+            {
+                path: '/novel/history',
+                name: 'BookHistory',
+                component:()=>import('./admin/qiantai/BookHistory.vue')
             }
 
         ]
@@ -102,12 +107,16 @@ const routes=[
             },
             {
                 path: '/a1/l6',
-                component: () => import('./admin/BorrowRecordManagent/BorrowRecordList.vue') // 这里根据实际的路径和组件名进行设置
+                component: () => import('./admin/BorrowRecordManagent/PhysicalBorrowRecordList.vue') // 这里根据实际的路径和组件名进行设置
             },
             {
                 path: '/a1/l7',
                 component: () => import('./admin/FeedbackManagement/FeedbackList.vue') // 这里根据实际的路径和组件名进行设置
             },
+            {
+                path: '/a1/l8',
+                component: () => import('./admin/BorrowRecordManagent/EbookBorrowRecordList.vue') // 这里根据实际的路径和组件名进行设置
+            }
         ]
 
     },

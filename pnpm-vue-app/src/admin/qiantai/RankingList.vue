@@ -6,6 +6,10 @@
           :key="index"
           :type="activeCategory === category.id? 'primary' : ''"
           @click="changeCategory(category.id)"
+          :style="{ backgroundColor: activeCategory === category.id? '#f8bbd0' : 'white',
+                    color: activeCategory === category.id? 'white' : '#f8bbd0',
+                    border: activeCategory === category.id? 'none' : '1px solid #f8bbd0'
+  }"
       >
         {{ category.label }}
       </el-button>
@@ -31,8 +35,8 @@
           </div>
         </div>
         <div class="book-actions">
-          <el-button type="primary" size="small">书籍详情</el-button>
-          <el-button size="small">加入书架</el-button>
+          <el-button @click="goToBookDetail(record.book.id)" class="custom-pink-button">书籍详情</el-button>
+          <el-button class="custom-pink-button1">加入借书架</el-button>
         </div>
       </div>
     </div>
@@ -54,6 +58,7 @@
 import { ref, onMounted } from 'vue';
 import { ElButton } from 'element-plus';
 import axios from 'axios';
+import router from "../../router.js";
 
 // 模拟分类数据，调整为和 Label 类一致的数据结构
 const categories = ref([]);
@@ -123,6 +128,11 @@ const handleSizeChange = (newSize) => {
     });
     filteredRecords.value = filtered.slice(0, pageSize.value);
   }
+};
+
+//
+const goToBookDetail = (bookId) => {
+  router.push({ name: 'BookDesc', params: { id: bookId } });
 };
 
 // 当前页码变化时的处理函数
@@ -228,6 +238,8 @@ onMounted(() => {
   color: #666;
   font-size: 14px;
   margin-bottom: 10px;
+  margin-right: 30px;
+
 }
 
 .book-desc {
@@ -240,21 +252,19 @@ onMounted(() => {
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.update-info {
-  color: #007bff;
-  font-size: 14px;
+  margin-right: 30px;
 }
 
 .book-actions {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  margin-top: 60px;
+  align-items: center;
 }
 
 .borrow-count {
-  color: #007bff;
+  color: #f8bbd0;
   margin-left: 10px;
 }
 
@@ -266,10 +276,56 @@ onMounted(() => {
 }
 
 .book-label {
-  background-color: #e0e0e0;
+  background-color: #f8bbd0;
   padding: 2px 5px;
   border-radius: 3px;
   font-size: 12px;
+  color: white;
+}
+
+.custom-pink-button {
+  background-color: #f8bbd0;
+  color: white;
+  border: none;
+  width: 90px; /* 添加固定宽度，可根据实际需求调整数值 */
+  border-radius: 4px;
+  padding: 8px 16px; /* 设置统一的内边距 */
+  margin: 0; /* 设置统一的外边距，可根据实际需求调整 */
+}
+
+.custom-pink-button:hover,
+.custom-pink-button:focus {
+  background-color: #faa3c1;
+  color: white;
+  border: none;
+}
+
+.custom-pink-button:active {
+  background-color: #faa3c1;
+  color: white;
+  border: none;
+}
+.custom-pink-button1 {
+  background-color: white;
+  color: #f8bbd0;
+  border: 1px solid #f8bbd0;
+  width: 90px; /* 添加固定宽度，可根据实际需求调整数值 */
+  border-radius: 4px;
+  padding: 8px 16px; /* 设置统一的内边距 */
+  margin: 0; /* 设置统一的外边距，可根据实际需求调整 */
+}
+
+.custom-pink-button1:hover,
+.custom-pink-button1:focus {
+  background-color: white;
+  color: #faa3c1;
+  border: 1px solid #f8bbd0;
+}
+
+.custom-pink-button1:active {
+  background-color: white;
+  color: #faa3c1;
+  border: none;
 }
 </style>
 

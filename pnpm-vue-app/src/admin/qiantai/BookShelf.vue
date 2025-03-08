@@ -92,6 +92,16 @@
           </div>
           <button class="return-button" :disabled="book.borrowRecord.status === '已归还'" @click="returnBook(index)">归还
           </button>
+          <div >
+            <el-dialog
+                width="50%"
+                title="逾期提醒"
+                v-model="isOverdueDialogVisible"
+                center
+            >
+              <p>您有书籍已逾期，请尽快归还。</p>
+            </el-dialog>
+          </div>
         </div>
       </div>
       <!--信息中心-->
@@ -329,12 +339,21 @@ if (id) {
 } else {
   console.log('未获取到用户 ID，可能用户未登录或会话已过期');
 }
+const isOverdueDialogVisible = ref(false);
 const getData = () => {
   axios.get(`http://localhost:8080/borrowRecord/findById/${id}`)
       .then((response) => {
         books.value = response.data;
+
         console.log(books.value)
         bookCount.value = books.value.length
+        // 遍历 books 数组，检查 borrowRecord 的状态
+        for (const book of books.value) {
+          if (book.borrowRecord && book.borrowRecord.status === '已逾期') {
+            isOverdueDialogVisible.value = true;
+            break; // 找到一个逾期记录就跳出循环
+          }
+        }
       })
       .catch((error) => {
         console.error("请求出错:", error);
@@ -626,7 +645,7 @@ const getCurrentDate = () => {
 };
 const returnBook = (index) => {
   const book = books.value[index];
-  if (book.borrowRecord.status === '借阅中') {
+  if (book.borrowRecord.status === '借阅中' || book.borrowRecord.status === '已逾期' ) {
     const updatedBorrowRecord = {...book.borrowRecord, status: '已归还', returnDate: getCurrentDate()};
     axios.put(`http://localhost:8080/borrowRecord/uid/${book.borrowRecord.id}`, updatedBorrowRecord)
         .then((response) => {
@@ -640,6 +659,8 @@ const returnBook = (index) => {
           ElMessage.error('归还失败');
           console.error("请求出错:", error);
         });
+  }else if(book.borrowRecord.status === '待处理'){
+    ElMessage.error('该书籍未借阅成功');
   } else {
     ElMessage.error('该书籍已归还');
   }
@@ -1094,6 +1115,10 @@ const deleteAll = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.custom-overdue-dialog {
+
 }
 
 </style>

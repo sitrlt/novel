@@ -19,6 +19,28 @@ import java.util.List;
 public interface BookMapper extends BaseMapper<Book> {
     @Select("select * from `book` where id = #{id}")
     Book selectById(int id);
+
+    @Select("SELECT COUNT(*) FROM book")
+    int getTotalBookCount();
+
+    @Select("SELECT COUNT(*) FROM borrow_record WHERE status = '借阅中'")
+    int getBorrowingBookCount();
+
+    @Select("SELECT COUNT(DISTINCT reader_id) FROM borrow_record WHERE status = '借阅中'")
+    int getBorrowingPersonCount();
+
+    @Select("SELECT COUNT(*) FROM borrow_record WHERE status = '已归还'")
+    int getReturnedBookCount();
+
+    @Select("SELECT COUNT(DISTINCT reader_id) FROM borrow_record WHERE status = '已归还'")
+    int getReturnedPersonCount();
+
+    @Select("SELECT COUNT(*) FROM borrow_record WHERE status = '已逾期'")
+    int getOverdueBookCount();
+
+    @Select("SELECT COUNT(DISTINCT reader_id) FROM borrow_record WHERE status = '已逾期'")
+    int getOverduePersonCount();
+
     @Select("SELECT DISTINCT * FROM `book` WHERE isbn = #{isbn}")
     @Results({
             @Result(property = "id", column = "id"),
@@ -167,5 +189,5 @@ public interface BookMapper extends BaseMapper<Book> {
 
 
     @Select("SELECT * FROM book WHERE title LIKE CONCAT('%', #{keyword}, '%') OR author LIKE CONCAT('%', #{keyword}, '%')")
-    IPage<Book> searchBooks(Page<Book> page, @Param("keyword") String keyword);
+    IPage<Book> searchBooks1(Page<Book> page, @Param("keyword") String keyword);
 }

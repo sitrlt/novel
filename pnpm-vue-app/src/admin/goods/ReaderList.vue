@@ -36,9 +36,8 @@
     <el-table-column prop="password" label="密码" width="100"></el-table-column>
     <el-table-column prop="email" label="邮箱" width="200"></el-table-column>
     <el-table-column prop="address" label="地址" width="150"></el-table-column>
-    <el-table-column prop="registrationDate" label="注册日期" width="120"></el-table-column>
+    <el-table-column prop="registrationDateStr" label="注册日期" width="200"></el-table-column>
     <el-table-column prop="phone" label="手机号" width="120"></el-table-column>
-    <el-table-column prop="preferences" label="偏好" width="100"> </el-table-column>
     <el-table-column label="操作" min-width="180">
       <template #default="{ row }">
         <el-button type="primary" size="small" icon="Edit" class="custom-pink-button"
@@ -105,18 +104,6 @@
       </el-form-item>
       <el-form-item label="地址" :label-width="100">
         <el-input v-model="tableform.address" autocomplete="off"/>
-      </el-form-item>
-      <el-form-item label="注册时间" :label-width="100">
-        <el-date-picker
-            v-model="tableform.registrationDate"
-            type="date"
-            placeholder="选择日期"
-            format="YYYY-MM-DD"
-            value-format="YYYY-MM-DD">
-        </el-date-picker>
-      </el-form-item>
-      <el-form-item label="偏好" :label-width="100">
-        <el-input v-model="tableform.preferences" autocomplete="off"/>
       </el-form-item>
     </el-form>
     <template #footer>
