@@ -17,6 +17,6 @@ import BookHeader from './BookHeader.vue'
 <style scoped>
 .divider {
   border-top: 1px solid #000;
-  margin-top: 500px;
+  margin-top: 800px;
 }
 </style>

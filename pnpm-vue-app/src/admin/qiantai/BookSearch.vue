@@ -24,29 +24,49 @@
         </div>
         <hr class="novel-divider"> <!-- 添加分隔线 -->
       </div>
+      <!-- 分页组件 -->
+      <el-pagination
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+          :current-page="currentPage"
+          :page-sizes="[5, 10, 20]"
+          :page-size="pageSize"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="total">
+      </el-pagination>
     </div>
   </div>
 </template>
 
 <script setup>
-import {ArrowRight} from '@element-plus/icons-vue';
-import {ref, onMounted, watch, computed} from 'vue';
-import {useRoute} from 'vue-router';
+import { ArrowRight } from '@element-plus/icons-vue';
+import { ref, onMounted, watch, computed } from 'vue';
+import { useRoute } from 'vue-router';
 import axios from 'axios';
 import router from "../../router.js";
 
 const route = useRoute();
 const searchKeyword = computed(() => route.query.keyword || '');
 const novels = ref([]);
+const currentPage = ref(1); // 当前页码
+const pageSize = ref(5); // 每页数量
+const total = ref(0); // 总记录数
 
 // 使用 axios 获取小说列表
 const fetchNovels = async () => {
   if (!searchKeyword.value) return; // 如果搜索关键词为空，则不执行请求
 
   try {
-    axios.get(`http://localhost:8080/book/search`, {params: {keyword: searchKeyword.value}}).then(response => {
-      novels.value = response.data;
-      console.log(novels)
+    axios.get(`http://localhost:8080/book/searchNovel`, {
+      params: {
+        keyword: searchKeyword.value,
+        pageNum: currentPage.value,
+        pageSize: pageSize.value
+      }
+    }).then(response => {
+      novels.value = response.data.records;
+      total.value = response.data.total;
+      console.log(novels);
     }).catch(error => {
       console.error(error);
     });
@@ -66,12 +86,24 @@ onMounted(() => {
 
 watch(searchKeyword, (newKeyword) => {
   if (newKeyword) {
+    currentPage.value = 1; // 搜索关键词变化时，重置页码为 1
     fetchNovels();
   }
 });
 
-</script>
+// 每页数量变化时的处理函数
+const handleSizeChange = (newSize) => {
+  pageSize.value = newSize;
+  currentPage.value = 1; // 每页数量变化时，重置页码为 1
+  fetchNovels();
+};
 
+// 当前页码变化时的处理函数
+const handleCurrentChange = (newPage) => {
+  currentPage.value = newPage;
+  fetchNovels();
+};
+</script>
 <style scoped>
 .novel-list-container {
   display: flex;
@@ -105,6 +137,7 @@ watch(searchKeyword, (newKeyword) => {
   width: 100%;
   border-bottom: 1px solid #ccc; /* 添加底部边框 */
   padding-bottom: 20px; /* 添加内边距 */
+  gap: 20px;
 }
 
 .novel-cover {
@@ -119,7 +152,7 @@ watch(searchKeyword, (newKeyword) => {
 }
 
 .novel-header {
-  margin-bottom: 10px;
+  display: flex;
 }
 
 .novel-title {
@@ -130,10 +163,17 @@ watch(searchKeyword, (newKeyword) => {
 .novel-author,
 .novel-update {
   color: #666;
+  margin-left: 20px;
+
 }
 
 .novel-synopsis {
   margin-bottom: 20px;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2; /* 限制显示两行 */
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 .el-button {

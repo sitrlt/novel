@@ -16,7 +16,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @CrossOrigin
@@ -138,6 +140,24 @@ public class BookController {
     public List<Book> searchBooks(@RequestParam("keyword") String keyword) {
         return bookMapper.searchBooks(keyword);
     }
+
+    @GetMapping("/book/searchNovel")
+    public Map<String, Object> searchBooks(
+            @RequestParam String keyword,
+            @RequestParam("pageNum") Integer pageNum,//使用 @RequestParam 注解来获取请求参数 pageNum 和 pageSize 的值，
+            @RequestParam("pageSize") Integer pageSize) {
+        // 创建分页对象
+        Page<Book> pageParam = new Page<>(pageNum, pageSize);
+        // 调用 Mapper 方法进行分页查询
+        IPage<Book> bookPage = bookMapper.searchBooks(pageParam, keyword);
+        // 构建返回结果
+        Map<String, Object> result = new HashMap<>();
+        result.put("records", bookPage.getRecords());
+        result.put("total", bookPage.getTotal());
+        return result;
+    }
+
+
 
 // 根据读者 ID 获取读者信息并设置兴趣标签
    private Reader getReaderById(int readerId) {

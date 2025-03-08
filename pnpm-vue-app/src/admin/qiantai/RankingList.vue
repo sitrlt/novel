@@ -36,6 +36,17 @@
         </div>
       </div>
     </div>
+    <!-- 新增分页组件 -->
+    <el-pagination
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        :current-page="currentPage"
+        :page-sizes="[5, 10, 20]"
+        :page-size="pageSize"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="totalRecords"
+    >
+    </el-pagination>
   </div>
 </template>
 
@@ -68,6 +79,11 @@ const activeCategory = ref(1); // 默认选中“全部”，其 id 设为 1
 // 过滤后的记录列表
 const filteredRecords = ref([]);
 
+// 分页相关变量
+const currentPage = ref(1); // 当前页码
+const pageSize = ref(5); // 每页数量
+const totalRecords = ref(0); // 总记录数
+
 const getCategoryLabel = (id) => {
   const category = categories.value.find(cat => cat.id === id);
   return category? category.label : '';
@@ -80,8 +96,8 @@ const changeCategory = (categoryId) => {
   console.log('当前选择的分类标签:', categoryLabel);
   if (categoryId === 0) {
     // 如果选择“全部”，则显示所有记录
-    filteredRecords.value = records.value;
-    console.log('选择“全部”，显示所有', records.value.length, '条记录');
+    filteredRecords.value = records.value.slice((currentPage.value - 1) * pageSize.value, currentPage.value * pageSize.value);
+    console.log('选择“全部”，显示当前页', filteredRecords.value.length, '条记录');
   } else {
     // 否则根据选择的分类过滤记录
     const filtered = records.value.filter((record) => {
@@ -89,8 +105,37 @@ const changeCategory = (categoryId) => {
       console.log('书籍:', record.book.title, '是否匹配当前分类:', match);
       return match;
     });
-    filteredRecords.value = filtered;
-    console.log('选择非“全部”分类，过滤后剩余', filtered.length, '条记录');
+    filteredRecords.value = filtered.slice((currentPage.value - 1) * pageSize.value, currentPage.value * pageSize.value);
+    console.log('选择非“全部”分类，过滤后当前页剩余', filteredRecords.value.length, '条记录');
+  }
+};
+
+// 每页数量变化时的处理函数
+const handleSizeChange = (newSize) => {
+  pageSize.value = newSize;
+  currentPage.value = 1;
+  if (activeCategory.value === 0) {
+    filteredRecords.value = records.value.slice(0, pageSize.value);
+  } else {
+    const filtered = records.value.filter((record) => {
+      const match = record.book.labels.some((label) => label.label === getCategoryLabel(activeCategory.value));
+      return match;
+    });
+    filteredRecords.value = filtered.slice(0, pageSize.value);
+  }
+};
+
+// 当前页码变化时的处理函数
+const handleCurrentChange = (newPage) => {
+  currentPage.value = newPage;
+  if (activeCategory.value === 0) {
+    filteredRecords.value = records.value.slice((newPage - 1) * pageSize.value, newPage * pageSize.value);
+  } else {
+    const filtered = records.value.filter((record) => {
+      const match = record.book.labels.some((label) => label.label === getCategoryLabel(activeCategory.value));
+      return match;
+    });
+    filteredRecords.value = filtered.slice((newPage - 1) * pageSize.value, newPage * pageSize.value);
   }
 };
 
@@ -103,8 +148,9 @@ onMounted(() => {
         // 假设后端返回的数据和 records 结构一致，直接赋值
         console.log(data);
         records.value = data;
-        // 初始默认显示所有书籍
-        filteredRecords.value = records.value;
+        totalRecords.value = data.length;
+        // 初始默认显示所有书籍的第一页
+        filteredRecords.value = records.value.slice(0, pageSize.value);
       })
       .catch(error => {
         console.error('获取数据失败', error);
@@ -117,7 +163,11 @@ onMounted(() => {
   padding: 20px;
   border-radius: 5px;
 }
-
+/*在ElementPlus中，可使用组件名称的类选择器选择对应组件，从而修改默认组件样式*/
+.el-pagination { /*选择分页组件，默认采取Flex布局*/
+  justify-content: center; /*水平方向居中对齐*/
+  margin-top: 8px;
+}
 .title {
   margin-bottom: 20px;
 }

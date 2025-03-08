@@ -10,6 +10,8 @@ import com.example.novel.pojo.BookInventory;
 import com.example.novel.pojo.Label;
 import com.example.novel.pojo.Publisher;
 import org.apache.ibatis.annotations.*;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
@@ -162,4 +164,8 @@ public interface BookMapper extends BaseMapper<Book> {
                     one = @One(select = "com.example.novel.mapper.PublisherMapper.selectById"))
     })
     List<Book> searchBooks(@Param("keyword") String keyword);
+
+
+    @Select("SELECT * FROM book WHERE title LIKE CONCAT('%', #{keyword}, '%') OR author LIKE CONCAT('%', #{keyword}, '%')")
+    IPage<Book> searchBooks(Page<Book> page, @Param("keyword") String keyword);
 }
