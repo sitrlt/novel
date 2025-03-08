@@ -26,7 +26,9 @@
           <div class="book-synopsis">
             <p>{{ currentBook.description }}</p>
           </div>
-          <el-button @click="addToBorrowList" class="add-to-borrow-btn">加入借书架</el-button>
+          <el-button @click="handleButtonClick" class="add-to-borrow-btn">
+            {{ currentBook.bookInventory?.availableCopies === 0? '加入预约书架' : '加入借书架' }}
+          </el-button>
         </div>
 
       </div>
@@ -103,7 +105,6 @@ const getData = () => {
         if(currentBook.value.ebook === true){
           status.value = '借阅中'
         }
-
       })
       .catch((error) => {
         console.error("请求出错:", error);
@@ -137,6 +138,37 @@ const addToBorrowList = async () => {
 const goToCommentSection = () => {
   router.push({ name: 'BookReviews', params: { id: bookId } });
 }
+
+const addToReservationList = async () => {
+  try {
+    // 等待 getData 函数中的请求完成
+    await getData();
+    // 创建 borrowRecord 对象
+    const reservation = {
+      readerId: id,
+      bookIsbn: currentBook.value.isbn,
+    };
+    console.log(reservation);
+    // 发送添加借阅记录的请求
+    const response = await axios.post("http://localhost:8080/reservation/create", reservation);
+    ElMessage({type: 'success', message: '添加成功!'});
+    console.log(response.data);
+  } catch (error) {
+    ElMessage.error('添加失败');
+    console.error("请求出错:", error);
+  }
+  console.log('加入预约书架:', currentBook.value);
+};
+
+const handleButtonClick = () => {
+  if (currentBook.value.bookInventory?.availableCopies === 0) {
+    // 加入预约书架的逻辑
+    addToReservationList();
+  } else {
+    // 加入借书架的逻辑
+    addToBorrowList();
+  }
+};
 
 const count = ref(0);
 const getCount = () => {

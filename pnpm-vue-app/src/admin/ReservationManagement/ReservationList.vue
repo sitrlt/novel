@@ -1,8 +1,11 @@
 <template>
   <div class="topTool" style="width: 98%">
-    <el-input v-model="sname" placeholder="请输入文章名字搜索" class="search-input"
+    <el-input v-model="sname" placeholder="请输入文章名字搜索"
               @input="handleSearchName" :prefix-icon="Search">
     </el-input>
+    <el-button type="primary" :icon="Plus" @click="handleAdd"
+               style="margin-left: 20px;" class="custom-pink-button">添加数据
+    </el-button>
     <el-button type="danger" :icon="Delete" @click="handleDelList"
                v-if="multipleSelection.length>0">删除选中数据
     </el-button><!--当数据表格中有选中数据时才显示-->
@@ -11,24 +14,24 @@
   <el-table :data="displayedItems"
             :header-cell-style="{ background: '#f8bbd0',color:'white'}"
             empty-text="暂无数据"
+            header-align="center"
+
             @selection-change="handleSelectionChange"
             @sort-change="handleSortChange"
             border
-            style="width: 98%"
-  >
+            style="width: 98%">
     <el-table-column type="selection"/>
-    <el-table-column v-if="showIdInput" prop="id" label="序号" width="80" ></el-table-column>
-    <el-table-column prop="reader.username" label="昵称" width="80" ></el-table-column>
-    <el-table-column prop="feedbackType" label="反馈类型" width="350" header-align="center"></el-table-column>
-    <el-table-column prop="content" label="问题反馈" width="400" header-align="center"></el-table-column>
-    <el-table-column prop="createdAtStr" label="反馈时间" width="200" header-align="center"></el-table-column>
-    <el-table-column prop="status" label="状态" width="100"></el-table-column>
-    <el-table-column label="操作" min-width="180">
+    <el-table-column prop="id" label="序号" width="100" ></el-table-column>
+    <el-table-column prop="reader.username" label="昵称" width="100" ></el-table-column>
+    <el-table-column prop="book.title" label="文章" width="250" fixed></el-table-column>
+    <el-table-column prop="reserveDateStr" label="预约日期" width="200"></el-table-column>
+    <el-table-column prop="bookInventory.totalCopies" label="总数量" width="120"> </el-table-column>
+    <el-table-column prop="bookInventory.availableCopies" label="可借数量" width="120"> </el-table-column>
+    <el-table-column prop="status" label="状态" width="120"> </el-table-column>
+    <el-table-column label="操作" min-width="350">
       <template #default="{ row }">
-        <el-button type="primary" size="small" icon="Message"
-                   :disabled="row.status === '已处理'"
-                   class="custom-pink-button"
-                   @click="leEdit(row)">回复
+        <el-button class="custom-pink-button" size="small" @click="handleClick(row)" icon="Star">
+          {{ row.bookInventory.availableCopies > 0? '可借阅' : '无库存' }}
         </el-button>
         <el-button type="danger" size="small" icon="Delete"
                    @click="onDelete(row)">删除
@@ -37,7 +40,6 @@
     </el-table-column>
   </el-table>
   <el-pagination
-      background
       :current-page="currentPage"
       :page-size="pageSize"
       :page-sizes="[4,10,15,20]"
@@ -46,30 +48,30 @@
       @current-change="handleCurrentChange"
       @size-change="handleSizeChange"
   />
-  <el-dialog v-model="dialogFormVisible" :title="dialogTitle">
-    <el-form :model="tableform">
+  <el-dialog v-model="dialogVisible" title="管理员通知内容" center>
+    <el-form :model="dialogForm" >
       <el-form-item v-if="showIdInput" label="ID" :label-width="100">
-        <el-input v-model="tableform.id" autocomplete="off" @blur="inputId" disabled/>
+        <el-input v-model="dialogForm.id" autocomplete="off" disabled/>
       </el-form-item>
-      <el-form-item label="回复内容" :label-width="100">
-        <el-input v-model="tableform.adminResponse" autocomplete="off"/>
+      <el-form-item label="通知内容" prop="adminResponse">
+        <el-input v-model="dialogForm.adminResponse" placeholder="请输入通知内容"></el-input>
       </el-form-item>
     </el-form>
     <template #footer>
-    <span class="dialog-footer">
-      <el-button type="primary" @click="dialogOk">
-        确定
-      </el-button>
-    </span>
+                <span class="dialog-footer">
+                    <el-button @click="dialogVisible = false">取消</el-button>
+                    <el-button type="primary" @click="handleSubmit">确定</el-button>
+                </span>
     </template>
   </el-dialog>
+
 </template>
 
 <script setup>
 import axios from "axios";
 import {computed, onMounted, reactive, watch} from 'vue'
 import {ref} from 'vue'
-import {Plus, Delete, Edit,Search,Message} from '@element-plus/icons-vue'
+import {Plus, Delete, Edit,Search,ZoomIn} from '@element-plus/icons-vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
 //员工数组
 // 创建响应式数据
@@ -80,24 +82,43 @@ let total = ref(0);// 初始化数据总条数
 let displayedItems = ref(members.slice(0, pageSize));//初始化当前页显示数据
 const dialogFormVisible = ref(false)//初始化弹窗不显示
 const dialogVisible = ref(false)
-// 获取当前时间
-const now = new Date();
-const year = now.getFullYear();
-const month = String(now.getMonth() + 1).padStart(2, '0');
-const day = String(now.getDate()).padStart(2, '0');
-const hours = String(now.getHours()).padStart(2, '0');
-const minutes = String(now.getMinutes()).padStart(2, '0');
-const seconds = String(now.getSeconds()).padStart(2, '0');
-const currentDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-let tableform = ref({})//初始化弹窗表单数据
+let tableform = ref({
+})//初始化弹窗表单数据
+const showIdInput = ref(false); // 控制显示隐藏的状态
 let dialogType = ref('add')//初始化弹窗类型为增加弹窗
 const dialogTitle = computed(() => {//设置弹窗的标题
-  return dialogType.value === 'add' ? '新增数据' : '反馈回复'
+  return dialogType.value === 'add' ? '新增数据' : '编辑数据'
 })
-const showIdInput = ref(false); // 控制显示隐藏的状态
+const dialogForm = ref({})
+const dialogFormRef = ref();
+const handleClick = (row) => {
+  if (row.bookInventory.availableCopies > 0) {
+    dialogVisible.value = true;
+    dialogForm.value = {...row}
+
+  }
+};
+
+const handleSubmit = async () => {
+      dialogVisible.value = false
+  const updatedReservation = { ...dialogForm.value, status: '已处理'};
+      console.log(updatedReservation)
+  axios.put(`http://localhost:8080/reservation/uid/${updatedReservation.id}`, updatedReservation)
+      .then((response) => {
+        ElMessage({ type: 'success', message: '修改成功!' });
+        getData()
+        dialogForm.value = {}
+      })
+      .catch((error) => {
+        ElMessage.error('修改失败');
+        console.error("请求出错:", error);
+      });
+
+};
+
 
 // 发送请求获取数据
-axios.get("http://localhost:8080/feedback/findAll").then((response) => {
+axios.get("http://localhost:8080/reservation/findAll").then((response) => {
   members = response.data;
   total.value =members.length;
   displayedItems.value = members; // 更新ref变量的值\
@@ -105,20 +126,20 @@ axios.get("http://localhost:8080/feedback/findAll").then((response) => {
   console.error("请求出错:", error);
   // 处理错误，例如显示错误信息或采取其他措施
 })
-
 // 监听数据变化
 onMounted(() => {
   getData();
 })
-
 // 监听sex属性的变化，并更新表单
-watch(tableform.value.sex, (newVal) => {
-  tableform.value.sex = newVal;
+watch(dialogForm.value.sex, (newVal) => {
+  dialogForm.value.sex = newVal;
 });
 
 //获取当前页数据
+const filteredItems = ref()
+
 const getData = () => {
-  axios.get(`http://localhost:8080/feedback/findByPage`, {
+  axios.get(`http://localhost:8080/reservation/findByPage`, {
     params: {
       pageNum: currentPage.value,
       pageSize: pageSize.value
@@ -126,7 +147,7 @@ const getData = () => {
   })
       .then(response => {
         displayedItems.value = response.data.records;
-        console.log(response.data)
+        console.log(displayedItems.value)
         total.value = response.data.total;
       })
       .catch(error => {
@@ -147,8 +168,11 @@ const handleSizeChange=(pagesize)=>{
 let sname = ref('')//初始化搜索框的值
 const handleSearchName = (val) => {
   if (val.length > 0) {
-    axios.get(`http://localhost:8080/feedback/search`,{params:{keyword:val}}).then(response => {
+    axios.get(`http://localhost:8080/borrowRecord/search`,{params:{keyword:val}}).then(response => {
       displayedItems.value = response.data;
+      console.log(displayedItems.value)
+
+      ElMessage({type: 'success', message: '查询成功！',})
     }).catch(error => {
       console.error(error);
     });
@@ -176,36 +200,10 @@ const handleAdd = () => { //箭头函数
   tableform.value = {}
 }
 
-//创建弹窗确定按钮事件dialogOk
-const dialogOk = () => {
-  dialogFormVisible.value = false; // 关闭对话框
-    const updatedFeedback = { ...tableform.value, status: '已处理',responseDate:currentDate};
-    console.log(updatedFeedback)
-    axios.put(`http://localhost:8080/feedback/uid/${updatedFeedback.id}`, updatedFeedback)
-        .then((response) => {
-          ElMessage({ type: 'success', message: '修改成功!' });
-          getData(); // 重新获取数据
-        })
-        .catch((error) => {
-          ElMessage.error('修改失败');
-          console.error("请求出错:", error);
-        });
-};
-
-//修改编辑按钮点击事件handleEdit，代码如下：
-function leEdit(row) { // row 为当前行的数据
-  dialogFormVisible.value = true // 设置对话框显示状态为 true
-  tableform.value = {...row} //表单数据设置为传入行数据
-  dialogType.value = 'edit' // 设置对话框类型为 "edit"，方便修改弹窗标题
-}
-function onLook(row) { // row 为当前行的数据
-  dialogVisible.value = true // 设置对话框显示状态为 true
-  tableform.value = {...row} //表单数据设置为传入行数据
-}
 
 //创建删除行数据的方法delrow，代码如下：
 const delrow = (row) => { // 定义一个函数，用于删除某行数据
-  axios.delete(`http://localhost:8080/feedback/id/${row.id}`)
+  axios.delete(`http://localhost:8080/reservation/delete/${row.id}`)
       .then(() => {
         getData();
       })
@@ -217,7 +215,7 @@ const delrow = (row) => { // 定义一个函数，用于删除某行数据
 //修改删除按钮点击事件方法handleDelete，代码如下：
 const onDelete = (row) => {
   ElMessageBox.confirm(
-      '您确定要删除姓名为【' + row.reader.username + '】的数据吗?', '危险操作',
+      '您确定要删除书名为【' + row.book.title + '】的数据吗?', '危险操作',
       {confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning',}
   )
       .then(() => {
@@ -260,15 +258,36 @@ const handleDelList = () => {
   justify-content: space-between;
   margin-bottom: 12px;
   margin-top: 16px;
-  align-items: center;
-
 }
-.search-input {
-  margin: 0 2px;
+.cover-image {
+  max-width: 100%;
+  width: 400px;
+  height: 450px;
 }
 
-.book-info p {
-  margin: 10px 0;
+.book-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.book-title {
+  font-size: 1.2em;
+  margin-bottom: 10px;
+}
+
+.book-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-gap: 10px;
+  margin-bottom: 10px;
+}
+
+.book-details p {
+  margin: 0;
+}
+
+.book-description {
+  margin-top: 10px;
 }
 .form {
   width: 400px;
@@ -300,5 +319,6 @@ const handleDelList = () => {
   color: white;
   border: none;
 }
+
 
 </style>

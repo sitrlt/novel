@@ -29,16 +29,6 @@
     <el-table-column prop="status" label="状态" width="120"> </el-table-column>
     <el-table-column label="操作" min-width="350">
       <template #default="{ row }">
-        <el-button
-            :type="row && row.book &&!row.book.ebook && row.status === '待处理'? 'primary' : 'danger'"
-            size="small"
-            :icon="row && row.book &&!row.book.ebook && row.status === '待处理'? 'Star' : ''"
-            class="custom-pink-button"
-            @click="row && row.book &&!row.book.ebook && row.status === '待处理'? checkInventoryAndBorrow(row) : rejectBorrowRequest(row)"
-            v-if="(row && row.book &&!row.book.ebook && row.status === '待处理') || row.status === '已逾期'"
-        >
-          {{ row && row.book &&!row.book.ebook && row.status === '待处理'? '同意借阅' : '拒绝借阅' }}
-        </el-button>
         <el-button type="danger" size="small" icon="Delete"
                    @click="onDelete(row)">删除
         </el-button>

@@ -49,4 +49,17 @@ public interface BookInventoryMapper extends BaseMapper<BookInventory> {
     Integer getAvailableCountByIsbn(@Param("bookIsbn") String bookIsbn);
 
 
+    @Select("SELECT pi.* " +
+            "FROM book_inventory pi " +
+            "JOIN book b ON b.isbn = pi.book_isbn " +  // 注意这里的空格
+            "WHERE b.title LIKE CONCAT('%', #{keyword}, '%') ")
+    @Results({
+            @Result(property = "id", column = "id"),
+            @Result(property = "bookIsbn", column = "book_isbn"),
+            @Result(property = "totalCopies", column = "total_copies"),
+            @Result(property = "availableCopies", column = "available_copies"),
+            @Result(column = "book_isbn", property = "book", javaType = Book.class,
+                    one = @One(select = "com.example.novel.mapper.BookMapper.selectByIsbn")),
+    })
+    List<BookInventory> searchBookInventory(@Param("keyword") String keyword);
 }

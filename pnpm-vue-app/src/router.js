@@ -107,7 +107,7 @@ const routes=[
             },
             {
                 path: '/a1/l6',
-                component: () => import('./admin/BorrowRecordManagent/PhysicalBorrowRecordList.vue') // 这里根据实际的路径和组件名进行设置
+                component: () => import('./admin/BorrowRecordManagement/PhysicalBorrowRecordList.vue') // 这里根据实际的路径和组件名进行设置
             },
             {
                 path: '/a1/l7',
@@ -115,8 +115,12 @@ const routes=[
             },
             {
                 path: '/a1/l8',
-                component: () => import('./admin/BorrowRecordManagent/EbookBorrowRecordList.vue') // 这里根据实际的路径和组件名进行设置
-            }
+                component: () => import('./admin/BorrowRecordManagement/EbookBorrowRecordList.vue') // 这里根据实际的路径和组件名进行设置
+            },
+            {
+                path: '/a1/l9',
+                component: () => import('./admin/ReservationManagement/ReservationList.vue') // 这里根据实际的路径和组件名进行设置
+            },
         ]
 
     },

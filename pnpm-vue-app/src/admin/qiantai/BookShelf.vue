@@ -77,10 +77,16 @@
     <div class="content">
       <!--书架详情-->
       <div v-if="currentView === 'bookshelf'" class="card">
-        <div class="bookshelf-header">
-          <h2>我的书架 (<span>{{ bookCount }}</span>)</h2>
-        </div>
-        <div class="book-item" v-for="(book, index) in books" :key="index">
+        <div class="shelf-toggle-header">
+            <div class="bookshelf-header" @click="toggleShelf('bookshelf')">
+              <h2>我的书架 (<span>{{ bookCount }}</span>)</h2>
+            </div>
+            <div class="bookshelf-header" @click="toggleShelf('reservationShelf')">
+              <h2>我的预约书架 (<span>{{ reservationBookCount }}</span>)</h2>
+            </div>
+          </div>
+        <div class="bookshelf" :style="{ display: currentShelf === 'bookshelf'? 'block' : 'none' }">
+          <div class="book-item" v-for="(book, index) in books" :key="index">
           <input type="checkbox" class="checkbox">
           <div class="book-cover">
             <img :src="book.book.coverImage" alt="Book Cover" class="cover-img">
@@ -103,6 +109,22 @@
             </el-dialog>
           </div>
         </div>
+          </div>
+        <div class="reservation-shelf" :style="{ display: currentShelf ==='reservationShelf'? 'block' : 'none' }">
+          <div class="book-item" v-for="(reservationBook, index) in reservationBooks" :key="index.id">
+            <input type="checkbox" class="checkbox">
+            <div class="book-cover">
+              <img :src="reservationBook.book?.coverImage" alt="Book Cover" class="cover-img">
+            </div>
+            <div class="book-details">
+              <div class="book-title">{{ reservationBook.book?.title }}</div>
+              <div class="book-author">{{ reservationBook.book?.author }}</div>
+              <div class="book-read-status">{{ reservationBook.status }}</div>
+            </div>
+            <button class="return-button" @click="cancelReservation(index)">取消预约</button>
+          </div>
+        </div>
+
       </div>
       <!--信息中心-->
       <div v-if="currentView === 'messages'" class="card">
@@ -323,7 +345,10 @@ import {ElMessage, ElMessageBox} from "element-plus";
 const currentView = ref('bookshelf');
 const bookCount = ref();
 const books = ref([]);
+const reservationBooks = ref([]);
+const reservationBookCount = ref(0);
 const reader = ref({});
+const currentShelf = ref('bookshelf');
 function getUserIdFromSessionStorage() {
   const role ='reader'; // 假设读者角色标识为'reader'
   const storageKey = `sessionUserId_${role}`;
@@ -383,6 +408,7 @@ onMounted(() => {
   getData()
   getMessages()
   getLabel()
+  fetchReservationBooks()
 });
 
 const getReader = () => {
@@ -665,7 +691,6 @@ const returnBook = (index) => {
     ElMessage.error('该书籍已归还');
   }
 };
-
 // 根据借阅记录计算状态的函数
 const getStatus = (borrowRecord) => {
   if (borrowRecord.status === '已归还') {
@@ -686,6 +711,50 @@ const getStatus = (borrowRecord) => {
   return '借阅中';
 };
 
+//删除预约
+const deleteReservation = (row) => {
+  axios.delete(`http://localhost:8080/reservation/delete/${row}`)
+      .then(()=>{
+        ElMessage({type: 'success', message: '取消预约成功!'});
+      }).catch((error)=>{
+    console.error("请求出错:", error);
+  })
+}
+const fetchReservationBooks = () => {
+  axios.get(`http://localhost:8080/reservation/findById/${id}`)
+      .then((response) => {
+        reservationBooks.value = response.data;
+        console.log(reservationBooks.value)
+        reservationBookCount.value = reservationBooks.value.length
+        console.log( reservationBooks.value)
+      })
+      .catch((error) => {
+        console.error("请求出错:", error);
+      });
+};
+
+
+const cancelReservation = (index) => {
+  const reservationBook = reservationBooks.value[index].book;
+  const id = reservationBooks.value[index].id
+  ElMessageBox.confirm(
+      '您确定要取消预约名为【' + reservationBook.title + '】的书籍吗?', '危险操作',
+      {confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning',}
+  )
+      .then(() => {
+        deleteReservation(id)
+        const newItems = [...reservationBooks.value];
+        newItems.splice(index, 1);
+        reservationBooks.value = newItems;
+        reservationBookCount.value = newItems.length
+      })
+      .catch(() => {
+        ElMessage({type: 'info', message: '取消删除!',})
+      })
+};
+const toggleShelf = (shelfType) => {
+  currentShelf.value = shelfType;
+};
 //问题反馈
 const feedback = ref({
   readerId: id,
@@ -854,11 +923,17 @@ const deleteAll = () => {
 }
 
 
-.bookshelf-header {
+.shelf-toggle-header {
+  border-radius: 5px;
+  padding: 10px;
+  margin: 10px;
+  cursor: pointer;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
+}
+
+.bookshelf-header,
+.reservation-shelf-header {
+  margin-right: 100px;
 }
 
 .bookshelf-header h2 {
@@ -1117,8 +1192,16 @@ const deleteAll = () => {
   align-items: center;
 }
 
-.custom-overdue-dialog {
-
+.book-container {
+  display: flex;
+  flex-direction: column;
+}
+.bookshelf,
+.reservation-shelf {
+  flex: 1;
+  border-radius: 5px;
+  padding: 10px;
+  margin: 10px;
 }
 
 </style>

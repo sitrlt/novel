@@ -63,6 +63,9 @@ public class BookInventoryController {
     public Integer getAvailableCount(@PathVariable String isbn) {
         return bookInventoryMapper.getAvailableCountByIsbn(isbn);
     }
-
+    @GetMapping("/bookInventory/search")
+    public List<BookInventory> searchBooks(@RequestParam("keyword") String keyword) {
+        return bookInventoryMapper.searchBookInventory(keyword);
+    }
 
 }
