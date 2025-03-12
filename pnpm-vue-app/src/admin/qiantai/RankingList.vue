@@ -36,7 +36,8 @@
         </div>
         <div class="book-actions">
           <el-button @click="goToBookDetail(record.book.id)" class="custom-pink-button">书籍详情</el-button>
-          <el-button class="custom-pink-button1">加入借书架</el-button>
+          <el-button class="custom-pink-button1" @click="handleButtonClick(record)">{{ record.bookInventory?.availableCopies === 0? '加入预约书架' : '加入借书架' }}
+          </el-button>
         </div>
       </div>
     </div>
@@ -56,9 +57,21 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { ElButton } from 'element-plus';
+import {ElButton, ElMessage} from 'element-plus';
 import axios from 'axios';
 import router from "../../router.js";
+function getUserIdFromSessionStorage() {
+  const role ='reader';
+  const storageKey = `sessionUserId_${role}`;
+  return sessionStorage.getItem(storageKey);
+}
+
+const id = getUserIdFromSessionStorage();
+if (id) {
+  console.log('当前登录读者的用户 ID:', id);
+} else {
+  console.log('未获取到用户 ID，可能用户未登录或会话已过期');
+}
 
 // 模拟分类数据，调整为和 Label 类一致的数据结构
 const categories = ref([]);
@@ -146,6 +159,81 @@ const handleCurrentChange = (newPage) => {
       return match;
     });
     filteredRecords.value = filtered.slice((newPage - 1) * pageSize.value, newPage * pageSize.value);
+  }
+};
+
+const addToReservationList = async (index) => {
+  try {
+    const reservation = {
+      readerId: id,
+      bookIsbn: index.bookIsbn,
+    };
+    const response = await axios.post("http://localhost:8080/reservation/create", reservation);
+    ElMessage({ type: 'success', message: '添加成功!' });
+  } catch (error) {
+    ElMessage.error('添加失败');
+    console.error("请求出错:", error);
+  }
+  console.log('加入预约书架:', index.value);
+};
+const now = new Date();
+const year = now.getFullYear();
+const month = String(now.getMonth() + 1).padStart(2, '0');
+const day = String(now.getDate()).padStart(2, '0');
+const currentDateString = `${year}-${month}-${day}`;
+const currentDate = new Date(year, month - 1, day);
+const dueDate = new Date(currentDate.getTime());
+dueDate.setDate(dueDate.getDate() + 60);
+
+const dueYear = dueDate.getFullYear();
+const dueMonth = String(dueDate.getMonth() + 1).padStart(2, '0');
+const dueDay = String(dueDate.getDate()).padStart(2, '0');
+
+const dueDateString = `${dueYear}-${dueMonth}-${dueDay}`;
+
+console.log(`借阅日期: ${currentDateString}`);
+console.log(`归还日期: ${dueDateString}`);
+const status = ref('待处理');
+
+const addToBorrowList = async (index) => {
+  console.log(index)
+  try {
+    const borrowRecord = {
+      readerId: id,
+      bookIsbn: index.bookIsbn,
+      dueDate: dueDateString,
+      borrowDate: currentDateString,
+      status: status.value
+    };
+    const response = await axios.post("http://localhost:8080/borrowRecord/create", borrowRecord);
+    if(response.data === '插入成功') {
+      ElMessage({type: 'success', message: '添加成功!'});
+    }else if(response.data === '该读者与书籍的组合已存在，无需重复插入'){
+      ElMessage.error('不可重复加入借书架');
+    }
+  } catch (error) {
+    ElMessage.error('添加失败');
+    console.error("请求出错:", error);
+  }
+  console.log('加入借书架:', index);
+};
+
+
+const handleButtonClick = (index) => {
+  console.log(index)
+   updateStatus(index)
+  console.log(status.value)
+  if (index.bookInventory?.availableCopies === 0) {
+    addToReservationList(index);
+  } else {
+    addToBorrowList(index);
+  }
+};
+const updateStatus = (index) => {
+  if (index.book && index.book.ebook === true) {
+    status.value = '借阅中';
+  } else {
+    status.value = '待处理';
   }
 };
 

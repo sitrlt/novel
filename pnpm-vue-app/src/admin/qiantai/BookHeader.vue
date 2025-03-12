@@ -82,6 +82,10 @@ const menuData = ref([
   {
     text: '历史文化',
     path: '/novel/history',
+  },
+  {
+    text: '社会文化',
+    path: '/novel/society',
   }
 ]);
 // 假设已经引入相关依赖
@@ -125,7 +129,7 @@ const goToShelf = () => {
 const goToLogin = () => {
   // 如果当前头像是初始头像，则跳转到登录界面
   if (!currentReader.value || currentReader.value.coverImage === defaultAvatar) {
-    router.push('/link23'); // 假设登录路由路径是 '/login'
+    router.push('/'); // 假设登录路由路径是 '/login'
   }
 };
 // 定义搜索处理函数

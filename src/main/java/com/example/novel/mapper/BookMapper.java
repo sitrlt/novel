@@ -190,4 +190,6 @@ public interface BookMapper extends BaseMapper<Book> {
 
     @Select("SELECT * FROM book WHERE title LIKE CONCAT('%', #{keyword}, '%') OR author LIKE CONCAT('%', #{keyword}, '%')")
     IPage<Book> searchBooks1(Page<Book> page, @Param("keyword") String keyword);
+
+
 }

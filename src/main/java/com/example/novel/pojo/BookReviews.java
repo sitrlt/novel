@@ -17,4 +17,6 @@ public class BookReviews {
     private String reviewDate;
     @TableField(exist = false)
     private Reader reader; // Publisher 对象
+    @TableField(exist = false)
+    private Book book;
 }

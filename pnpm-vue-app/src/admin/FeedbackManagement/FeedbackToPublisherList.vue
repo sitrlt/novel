@@ -1,6 +1,6 @@
 <template>
   <div class="topTool" style="width: 98%">
-    <el-input v-model="sname" placeholder="请输入文章名字搜索" class="search-input"
+    <el-input v-model="sname" placeholder="请输入反馈类型或问题反馈进行搜索" class="search-input"
               @input="handleSearchName" :prefix-icon="Search">
     </el-input>
     <el-button type="danger" :icon="Delete" @click="handleDelList"
@@ -149,7 +149,7 @@ const handleSizeChange=(pagesize)=>{
 let sname = ref('')//初始化搜索框的值
 const handleSearchName = (val) => {
   if (val.length > 0) {
-    axios.get(`http://localhost:8080/feedback/search`,{params:{keyword:val}}).then(response => {
+    axios.get(`http://localhost:8080/feedback/searchToPublisher`,{params:{keyword:val}}).then(response => {
       displayedItems.value = response.data;
     }).catch(error => {
       console.error(error);

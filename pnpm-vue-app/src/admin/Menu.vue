@@ -74,6 +74,11 @@ const menuData = [
     path: '/a1/l9'
   },
   {
+    text: '活动管理',
+    icon: 'View',
+    path: '/a1/l10'
+  },
+  {
     text: '反馈管理',
     icon: 'Medal',
     children: [
@@ -83,7 +88,7 @@ const menuData = [
   {
     text: '修改密码',
     icon: 'EditPen',
-    path: '/l10'
+    path: '/a1/l11'
   },
 
 ]

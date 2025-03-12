@@ -29,4 +29,16 @@ public class BookReviewsController {
     public int count(@PathVariable("bookId")int bookId){
         return bookReviewsMapper.countByBookId(bookId);
     }
+
+    @GetMapping("/bookReviews/search/{readerId}")
+    public List<BookReviews> search(@PathVariable("readerId") int readerId){
+        return bookReviewsMapper.selectByReaderId(readerId);
+    }
+
+    //通过id删除信息
+    @DeleteMapping("/bookReviews/id/{id}")
+    public int delBookReviews(@PathVariable("id") int id){
+        return bookReviewsMapper.deleteById(id);
+    }
+
 }

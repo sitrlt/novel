@@ -30,21 +30,21 @@
     </div>
     <!-- 评论弹窗 -->
     <el-dialog v-model="showCommentDialog" title="发布评论">
-        <el-form :model="newComment" ref="commentFormRef">
-          <el-form-item label="评分">
-            <el-rate v-model="newComment.rating"></el-rate>
-          </el-form-item>
-          <el-form-item label="评论内容">
-            <el-input v-model="newComment.content" type="textarea" rows="4"></el-input>
-          </el-form-item>
-        </el-form>
+      <el-form :model="newComment" ref="commentFormRef">
+        <el-form-item label="评分">
+          <el-rate v-model="newComment.rating"></el-rate>
+        </el-form-item>
+        <el-form-item label="评论内容">
+          <el-input v-model="newComment.content" type="textarea" rows="4">
+          </el-input>
+        </el-form-item>
+      </el-form>
       <template #footer>
         <el-button @click="showCommentDialog = false">取消</el-button>
         <el-button type="primary" @click="submitComment">提交</el-button>
       </template>
     </el-dialog>
   </div>
-
 </template>
 
 <script setup>
@@ -57,63 +57,47 @@ import {ElMessage} from "element-plus";
 const route = useRoute();
 const currentBook = ref(null);
 const bookId = parseInt(route.params.id);
-function getUserIdFromSessionStorage() {
-  const role ='reader'; // 假设读者角色标识为'reader'
-  const storageKey = `sessionUserId_${role}`;
-  return sessionStorage.getItem(storageKey);
-}
+const id = sessionStorage.getItem('sessionUserId_reader');
 
-// 在需要获取用户 ID 的地方调用该函数
-const id = getUserIdFromSessionStorage();
-
-if (id) {
-  console.log('当前登录读者的用户 ID:', id);
-  // 在这里可以进行后续操作，比如根据用户 ID 进行数据请求等
-} else {
+if (!id) {
   console.log('未获取到用户 ID，可能用户未登录或会话已过期');
 }
-// 模拟的评论数据，增加了rating字段
+
 const comments = ref([]);
-const getDate = () => {
-  axios.get(`http://localhost:8080/bookReviews/findById/${bookId}`)
-      .then((response) => {
-        comments.value = response.data;
-        console.log(response)
-      })
-      .catch((error) => {
-        console.error("请求出错:", error);
-        // 处理错误，例如显示错误信息或采取其他措施
-      });
-}
-onMounted(() => {
-  getDate()
-  axios.get(`http://localhost:8080/book/findById/${bookId}`)
-      .then((response) => {
-        currentBook.value = response.data;
-        console.log(response)
-      })
-      .catch((error) => {
-        console.error("请求出错:", error);
-        // 处理错误，例如显示错误信息或采取其他措施
-      });
-});
-// 控制评论弹窗的显示与隐藏
-let showCommentDialog = ref(false);
-// 存储新评论的表单数据
+const showCommentDialog = ref(false);
+const showEmojiPicker = ref(false);
 const newComment = ref({
   rating: 0,
   content: ''
 });
-// 表单引用
 const commentFormRef = ref(null);
+
+const getDate = () => {
+  axios.get(`http://localhost:8080/bookReviews/findById/${bookId}`)
+      .then((response) => {
+        comments.value = response.data;
+      })
+      .catch((error) => {
+        console.error("请求出错:", error);
+      });
+};
+
+onMounted(() => {
+  getDate();
+  axios.get(`http://localhost:8080/book/findById/${bookId}`)
+      .then((response) => {
+        currentBook.value = response.data;
+      })
+      .catch((error) => {
+        console.error("请求出错:", error);
+      });
+});
 
 const submitComment = () => {
   if (newComment.value.content.trim() === '') {
-    // 可以添加提示信息，这里简单输出日志
     console.log('评论内容不能为空');
     return;
   }
-  // 获取当前时间
   const now = new Date();
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -123,26 +107,23 @@ const submitComment = () => {
   const seconds = String(now.getSeconds()).padStart(2, '0');
   const currentDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 
-  // 模拟新评论数据
   const newCommentData = {
-    readerId:id,
-    bookId:bookId,
+    readerId: id,
+    bookId: bookId,
     reviewDate: currentDate,
     reviewText: newComment.value.content,
     rating: newComment.value.rating
   };
-  console.log(newCommentData)
+  console.log(newCommentData);
   axios.post("http://localhost:8080/bookReviews/create", newCommentData)
       .then((response) => {
-        ElMessage({ type: 'success', message: '添加成功!' });
-       getDate()
-
+        ElMessage({type: 'success', message: '添加成功!'});
+        getDate();
       })
       .catch((error) => {
         ElMessage.error('添加失败');
         console.error("请求出错:", error);
       });
-  // 关闭弹窗
   showCommentDialog.value = false;
 };
 
@@ -151,15 +132,12 @@ const submitComment = () => {
 <style scoped>
 .main-container {
   padding: 20px;
-
 }
 
 .breadcrumb {
-  /* 确保面包屑有合适的层级，不会被其他元素覆盖 */
-  margin-bottom: 20px; /* 给面包屑和书籍容器之间添加一些间距 */
+  margin-bottom: 20px;
 }
 
-/* 书籍卡片样式 */
 .book-card {
   border: 1px solid #e0e0e0;
   border-radius: 4px;
@@ -185,7 +163,6 @@ const submitComment = () => {
   margin-top: 5px;
 }
 
-/* 评论区样式 */
 .comment-section {
   margin-top: 20px;
 }
@@ -231,10 +208,18 @@ const submitComment = () => {
 }
 
 .active-star {
-  color: gold!important;
+  color: gold !important;
 }
 
 .comment-content {
   line-height: 1.5;
+}
+
+.picker {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
 }
 </style>

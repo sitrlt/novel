@@ -1,10 +1,9 @@
 package com.example.novel.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.example.novel.pojo.BookReviews;
-import com.example.novel.pojo.Label;
-import com.example.novel.pojo.Publisher;
-import com.example.novel.pojo.Reader;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.example.novel.pojo.*;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
@@ -27,4 +26,21 @@ public interface BookReviewsMapper extends BaseMapper<BookReviews> {
     @Insert("INSERT INTO book_reviews (reader_id, book_id, review_text, rating, review_date)\n" +
             "VALUES (#{readerId}, #{bookId}, #{reviewText}, #{rating}, #{reviewDate})")
     void insertBookReview(BookReviews bookReviews);
+    @Select("select * from book_reviews where reader_id = #{readerId}")
+    @Results({
+            @Result(property = "id", column = "id"),
+            @Result(property = "bookId", column = "book_id"),
+            @Result(property = "readText", column = "read_text"),
+            @Result(property = "reviewDate", column = "review_date"),
+            @Result(property = "rating", column = "rating"),
+            @Result(column = "reader_id", property = "reader", javaType = Reader.class,
+                    one = @One(select = "com.example.novel.mapper.ReaderMapper.selectById")),
+            @Result(column = "book_id", property = "book", javaType = Book.class,
+                    one = @One(select = "com.example.novel.mapper.BookMapper.selectById"))
+    })
+    List<BookReviews> selectByReaderId(@Param("readerId") int readerId);
+
+
+
+
 }

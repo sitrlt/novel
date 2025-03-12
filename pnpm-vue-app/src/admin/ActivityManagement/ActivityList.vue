@@ -14,33 +14,23 @@
   <el-table :data="displayedItems"
             :header-cell-style="{ background: '#f8bbd0',color:'white'}"
             empty-text="暂无数据"
-            header-align="center"
-
             @selection-change="handleSelectionChange"
             @sort-change="handleSortChange"
             border
-            style="width: 98%">
+            style="width: 98%"
+  >
     <el-table-column type="selection"/>
-    <el-table-column prop="id" label="序号" width="100" ></el-table-column>
-    <el-table-column prop="reader.username" label="昵称" width="100" ></el-table-column>
-    <el-table-column prop="book.title" label="文章" width="250" fixed></el-table-column>
-    <el-table-column prop="borrowDate" label="借阅日期" width="120"></el-table-column>
-    <el-table-column prop="dueDate" label="应还日期" width="150"> </el-table-column>
-    <el-table-column prop="returnDate" label="归还日期" width="120"> </el-table-column>
-    <el-table-column prop="bookInventory.totalCopies" label="总数量" width="120"> </el-table-column>
-    <el-table-column prop="bookInventory.availableCopies" label="可借数量" width="120"> </el-table-column>
-    <el-table-column prop="status" label="状态" width="120"> </el-table-column>
-   <el-table-column label="操作" min-width="350">
+    <el-table-column prop="id" label="序号" width="60"></el-table-column>
+    <el-table-column prop="activityName" label="活动" width="230" fixed></el-table-column>
+    <el-table-column prop="activityDescription" label="活动描述" width="400"></el-table-column>
+    <el-table-column prop="startTime" label="开始时间" width="200"></el-table-column>
+    <el-table-column prop="endTime" label="结束时间" width="200"></el-table-column>
+    <el-table-column prop="activityStatus" label="活动状态" width="100"></el-table-column>
+    <el-table-column prop="createTimeStr" label="创建时间" width="200"></el-table-column>
+    <el-table-column label="操作" min-width="300">
       <template #default="{ row }">
-        <el-button
-            :type="row && row.book &&!row.book.ebook && row.status === '待处理'? 'primary' : 'danger'"
-            size="small"
-            :icon="row && row.book &&!row.book.ebook && row.status === '待处理'? 'Star' : ''"
-            class="custom-pink-button"
-            @click="row && row.book &&!row.book.ebook && row.status === '待处理'? checkInventoryAndBorrow(row) : rejectBorrowRequest(row)"
-            v-if="(row && row.book &&!row.book.ebook && row.status === '待处理') || row.status === '已逾期'"
-        >
-          {{ row && row.book &&!row.book.ebook && row.status === '待处理'? '同意借阅' : '归还提醒' }}
+        <el-button type="primary" size="small" icon="Edit" class="custom-pink-button"
+                   @click="leEdit(row)">编辑
         </el-button>
         <el-button type="danger" size="small" icon="Delete"
                    @click="onDelete(row)">删除
@@ -49,24 +39,61 @@
     </el-table-column>
   </el-table>
   <el-pagination
-      :current-page="currentPage"
-      :page-size="pageSize"
+      v-model:current-page="currentPage"
+      v-model:page-size="pageSize"
       :page-sizes="[4,10,15,20]"
       :total="total"
       layout="sizes,prev, pager, next"
       @current-change="handleCurrentChange"
       @size-change="handleSizeChange"
   />
+  <el-dialog v-model="dialogFormVisible" :title="dialogTitle">
+    <el-form :model="tableform">
+      <el-form-item label="ID" :label-width="100">
+        <el-input v-model="tableform.id" autocomplete="off" disabled/>
+      </el-form-item>
+      <el-form-item label="活动" :label-width="100" v-if="is_edit">
+        <el-input v-model="tableform.activityName" autocomplete="off"/>
+      </el-form-item>
+      <el-form-item label="活动描述" :label-width="100">
+        <el-input v-model="tableform.activityDescription" autocomplete="off"/>
+      </el-form-item>
+      <el-form-item label="开始时间" :label-width="100">
+        <el-date-picker
+            v-model="tableform.startTime"
+            type="datetime"
+            placeholder="选择开始日期和时间"
+            value-format="yyyy-MM-dd HH:mm:ss"
+        >
+        </el-date-picker>
+      </el-form-item>
+      <el-form-item label="结束时间" :label-width="100">
+        <el-date-picker
+            v-model="tableform.endTime"
+            type="datetime"
+            placeholder="选择结束日期和时间"
+            value-format="yyyy-MM-dd HH:mm:ss"
+        >
+        </el-date-picker>
+      </el-form-item>
+    </el-form>
+    <template #footer>
+    <span class="dialog-footer">
+      <el-button type="primary" @click="dialogOk">
+        确定
+      </el-button>
+    </span>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup>
 import axios from "axios";
 import {computed, onMounted, reactive, watch} from 'vue'
 import {ref} from 'vue'
-import {Plus, Delete, Edit,Search,ZoomIn} from '@element-plus/icons-vue'
+import {Plus, Delete, Edit, Search, ZoomIn} from '@element-plus/icons-vue'
 import {ElMessage, ElMessageBox} from 'element-plus'
-//员工数组
-// 创建响应式数据
+
 let members = reactive([])
 let currentPage = ref(1);// 定义当前页码初始值为1
 let pageSize = ref(4);// 定义每页显示的数据条数为5
@@ -74,47 +101,37 @@ let total = ref(0);// 初始化数据总条数
 let displayedItems = ref(members.slice(0, pageSize));//初始化当前页显示数据
 const dialogFormVisible = ref(false)//初始化弹窗不显示
 const dialogVisible = ref(false)
-let tableform = ref({
-})//初始化弹窗表单数据
+let tableform = ref({})//初始化弹窗表单数据
 let dialogType = ref('add')//初始化弹窗类型为增加弹窗
 const dialogTitle = computed(() => {//设置弹窗的标题
   return dialogType.value === 'add' ? '新增数据' : '编辑数据'
 })
-const publisherNames = ref([]);
+const id = localStorage.getItem('publisherId');  // Retrieve the username from route parametersRetrieve the username from route parameters
+let is_edit = ref(false)
 
 
-/*
-// 发送请求获取数据
-axios.get("http://localhost:8080/physicalBorrowRecord/findAll").then((response) => {
-  members = response.data;
-  total.value =members.length;
-  displayedItems.value = members; // 更新ref变量的值\
-}).catch((error) => {
-  console.error("请求出错:", error);
-  // 处理错误，例如显示错误信息或采取其他措施
-})*/
 // 监听数据变化
 onMounted(() => {
   getData();
 })
+
 // 监听sex属性的变化，并更新表单
 watch(tableform.value.sex, (newVal) => {
   tableform.value.sex = newVal;
 });
 
 //获取当前页数据
-const filteredItems = ref()
-
 const getData = () => {
-  axios.get(`http://localhost:8080/physicalBorrowRecord/findByPage`, {
+  axios.get(`http://localhost:8080/activity/findByPage`, {
     params: {
       pageNum: currentPage.value,
-      pageSize: pageSize.value
+      pageSize: pageSize.value,
+      publisherId: id
     }
   })
       .then(response => {
         displayedItems.value = response.data.records;
-        console.log(displayedItems.value)
+        console.log(response.data)
         total.value = response.data.total;
       })
       .catch(error => {
@@ -127,19 +144,16 @@ const handleCurrentChange = (pageNum) => {
   getData();
 };
 //处理每页显示多少条事件
-const handleSizeChange=(pagesize)=>{
-  pageSize.value=pagesize;
+const handleSizeChange = (pagesize) => {
+  pageSize.value = pagesize;
   getData();
 }
 //存储当前页数据副本，方便清空搜索框还原当前页数据
 let sname = ref('')//初始化搜索框的值
 const handleSearchName = (val) => {
   if (val.length > 0) {
-    axios.get(`http://localhost:8080/borrowRecord/search`,{params:{keyword:val}}).then(response => {
+    axios.get(`http://localhost:8080/activity/search`, {params: {keyword: val}}).then(response => {
       displayedItems.value = response.data;
-      console.log(displayedItems.value)
-
-      ElMessage({type: 'success', message: '查询成功！',})
     }).catch(error => {
       console.error(error);
     });
@@ -164,54 +178,49 @@ const handleSortChange = (sortData) => {
 const handleAdd = () => { //箭头函数
   dialogFormVisible.value = true;
   dialogType.value = 'add';
+  is_edit.value=true
   tableform.value = {}
 }
+//创建弹窗确定按钮事件dialogOk
+const dialogOk = () => {
+  dialogFormVisible.value = false; // 关闭对话框
+  const publisherBook = { ...tableform.value, publisherId: id};
 
-const checkInventoryAndBorrow = async (row) => {
-  try {
-    // 先检查库存
-    const inventoryResponse = await axios.get(`http://localhost:8080/bookInventory/availableCount/${row.book.isbn}`);
-    const availableCount = inventoryResponse.data;
-    if (availableCount > 0) {
-      await leEdit(row);
-      getData()
-    } else {
-      ElMessage({ type: 'error', message: '库存不足，无法借阅!' });
-    }
-  } catch (error) {
-    ElMessage.error('检查库存失败');
-    console.error("检查库存请求出错:", error);
+  if (dialogType.value === 'add') {
+    axios.post("http://localhost:8080/activity/create", publisherBook)
+        .then((response) => {
+          ElMessage({type: 'success', message: '添加成功!'});
+          getData(); // 重新获取数据
+        })
+        .catch((error) => {
+          ElMessage.error('添加失败');
+          console.error("请求出错:", error);
+        });
+  } else {
+    axios.put(`http://localhost:8080/activity/uid/${tableform.value.id}`, tableform.value)
+        .then((response) => {
+          ElMessage({type: 'success', message: '修改成功!'});
+          getData(); // 重新获取数据
+        })
+        .catch((error) => {
+          ElMessage.error('修改失败');
+          console.error("请求出错:", error);
+        });
   }
 };
 
-const leEdit = async (row) => {
-  try {
-    // 表单数据设置为传入行数据，并更新状态为借阅中
-    tableform.value = { ...row, status: '借阅中' };
-    // 发送修改请求
-    const response = await axios.put(
-        `http://localhost:8080/borrowRecord/count/${tableform.value.id}`,
-        tableform.value
-    );
-    // 根据后端返回结果进行提示
-    if (response.data === '借阅成功') {
-      ElMessage({ type: 'success', message: '借阅成功!' });
-    }
-  } catch (error) {
-    ElMessage.error('修改失败');
-    console.error("请求出错:", error);
-  }
-};
+//修改编辑按钮点击事件handleEdit，代码如下：
+function leEdit(row) { // row 为当前行的数据
+  dialogFormVisible.value = true // 设置对话框显示状态为 true
+  tableform.value = {...row} //表单数据设置为传入行数据
+  dialogType.value = 'edit' // 设置对话框类型为 "edit"，方便修改弹窗标题
+  is_edit.value = false
+}
 
-const rejectBorrowRequest = (request) => {
-  ElMessage.success('已成功提醒归还请求');
-  const rejectionMessage = '读者有逾期未归还书籍，不得借阅';
-  // 使用 localStorage 存储拒绝信息，以读者姓名为键
-  localStorage.setItem(request.reader.username, rejectionMessage);
-};
+
 //创建删除行数据的方法delrow，代码如下：
 const delrow = (row) => { // 定义一个函数，用于删除某行数据
-  axios.delete(`http://localhost:8080/borrowRecord/id/${row.id}`)
+  axios.delete(`http://localhost:8080/activity/id/${row.id}`)
       .then(() => {
         getData();
       })
@@ -223,7 +232,7 @@ const delrow = (row) => { // 定义一个函数，用于删除某行数据
 //修改删除按钮点击事件方法handleDelete，代码如下：
 const onDelete = (row) => {
   ElMessageBox.confirm(
-      '您确定要删除姓名为【' + row.reader.username + '】的数据吗?', '危险操作',
+      '您确定要删除姓名为【' + row.activityName + '】的数据吗?', '危险操作',
       {confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning',}
   )
       .then(() => {
@@ -261,12 +270,24 @@ const handleDelList = () => {
 }
 </script>
 <style scoped>
+.form {
+  width: 400px;
+  margin-bottom: 20px;
+}
+
+/*在ElementPlus中，可使用组件名称的类选择器选择对应组件，从而修改默认组件样式*/
+.el-pagination { /*选择分页组件，默认采取Flex布局*/
+  justify-content: center; /*水平方向居中对齐*/
+  margin-top: 8px;
+}
+
 .topTool {
   display: flex;
   justify-content: space-between;
   margin-bottom: 12px;
   margin-top: 16px;
 }
+
 .cover-image {
   max-width: 100%;
   width: 400px;
@@ -297,17 +318,7 @@ const handleDelList = () => {
 .book-description {
   margin-top: 10px;
 }
-.form {
-  width: 400px;
-  margin-bottom: 20px;
-}
 
-/*在ElementPlus中，可使用组件名称的类选择器选择对应组件，从而修改默认组件样式*/
-.el-pagination { /*选择分页组件，默认采取Flex布局*/
-  justify-content: center; /*水平方向居中对齐*/
-  margin-top: 8px;
-
-}
 .custom-pink-button {
   background-color: #f8bbd0;
   color: white;
@@ -327,6 +338,4 @@ const handleDelList = () => {
   color: white;
   border: none;
 }
-
-
 </style>

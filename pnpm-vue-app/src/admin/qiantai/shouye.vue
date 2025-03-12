@@ -34,12 +34,13 @@
           <span>公告</span>
         </div>
         <ul class="announcement-list">
-          <li>[资讯] 书启韶华，金龙贺岁</li>
-          <li>[资讯] 护苗·绿书签行动</li>
-          <li>[公告] “绿书签行动”来啦！</li>
-          <li>[资讯] 未成年人网络素养提升</li>
-          <li>[资讯] 阅见非遗征文获奖公布</li>
-          <li>[资讯] 红色短剧剧本大赛征集</li>
+          <li
+              v-for="(activity, index) in activities"
+              :key="activity.id"
+              @click="getClickHandler(activity.id)"
+          >
+           [活动] {{ activity.activityName }}
+          </li>
         </ul>
       </div>
     </main>
@@ -83,7 +84,6 @@ import {ref, onMounted, onUnmounted, reactive} from 'vue';
 import {Search, View} from '@element-plus/icons-vue'
 import {ElIcon, ElInput, ElMessage} from 'element-plus';
 import axios from "axios";
-import router from "../../router.js";
 const carouselItems = ref([
   {
 
@@ -107,7 +107,9 @@ const carouselItems = ref([
     title: '与前男友在婚礼上'
   }
 ]);
+import { useRouter } from 'vue-router';
 
+const router = useRouter();
 // 假设已经引入相关依赖
 // 定义获取用户 ID 的函数
 function getUserIdFromSessionStorage() {
@@ -152,8 +154,28 @@ axios.get(`http://localhost:8080/book/interests/${id}`)
 const goToBookDetail = (bookId) => {
   router.push({name: 'BookDesc', params: {id: bookId}});
 };
-// 模拟推荐书籍数据
 
+//公告
+const activities = ref()
+
+const getActivity = () => {
+  // 发送请求获取数据
+  axios.get("http://localhost:8080/activity/findAll").then((response) => {
+    activities.value = response.data;
+    console.log(response.data)
+  }).catch((error) => {
+    console.error("请求出错:", error);
+    // 处理错误，例如显示错误信息或采取其他措施
+  })
+
+}
+
+const getClickHandler = (activityId) => {
+    router.push({ name: 'new', params: { id: activityId } })
+};
+
+
+//轮播图
 const currentIndex = ref(0);
 let interval;
 
@@ -182,6 +204,8 @@ onMounted(() => {
       startCarousel();
     }
   });
+  getActivity()
+
 });
 
 onUnmounted(() => {
@@ -265,16 +289,18 @@ onUnmounted(() => {
   padding: 10px;
 }
 
-.announcement-title {
-  display: flex;
-  align-items: center;
-  margin-bottom: 10px;
+.recommend-list {
+  flex: 1;
+  margin-left: 20px;
 }
 
-.announcement-list {
-  list-style-type: none;
-  padding: 0;
+.recommend-item {
+  display: flex;
+  margin-bottom: 10px;
+  align-items: center;
+  font-size: 14px;
 }
+
 
 .announcement-list li {
   margin-bottom: 5px;
@@ -360,18 +386,15 @@ onUnmounted(() => {
   margin-right: 5px;
 }
 
-.recommend-list {
-  flex: 1;
-  margin-left: 20px;
+.announcement-list {
+  list-style: none;
+  padding: 0;
 }
 
-.recommend-item {
-  display: flex;
-  margin-bottom: 10px;
-  align-items: center;
-  font-size: 14px;
+.announcement-item {
+  cursor: pointer;
+  padding: 10px;
 }
-
 .recommend-genre {
   margin-right: 5px;
   color: #f8bbd0;

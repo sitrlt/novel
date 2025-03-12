@@ -61,9 +61,11 @@ public class FeedbackController {
     }
     @GetMapping("/feedback/search")
     public List<Feedback> searchFeedbacks(@RequestParam("keyword") String keyword) {
-        QueryWrapper<Feedback> queryWrapper = new QueryWrapper<>();
-        queryWrapper.like("content", keyword);
-        return feedbackMapper.selectList(queryWrapper);
+        return feedbackMapper.searchFeedback(keyword);
+    }
+    @GetMapping("/feedback/searchToPublisher")
+    public List<Feedback> searchFeedbacksToPublisher(@RequestParam("keyword") String keyword) {
+        return feedbackMapper.searchFeedbackToPublisher(keyword);
     }
     @GetMapping("/feedback/findById/{id}")
     public List<Feedback> findBook(@PathVariable("id") int id){

@@ -27,6 +27,7 @@ const routes=[
     {path:'/forgetPassword',component:()=>import('./admin/login/forgerPassword.vue')},
     {path:'/register',component:()=>import('./admin/login/Register.vue')},
     {path:'/link25',component:()=>import('./admin/qiantai/PersonalCenter.vue')},
+    {path:'/new:id',name:'new',component:()=>import('./admin/qiantai/News1.vue')},
     {
         path:'/link8',
         component:()=>import('./components/test/test05.vue')
@@ -80,6 +81,11 @@ const routes=[
                 path: '/novel/history',
                 name: 'BookHistory',
                 component:()=>import('./admin/qiantai/BookHistory.vue')
+            },
+            {
+                path: '/novel/society',
+                name: 'BookSociety',
+                component:()=>import('./admin/qiantai/BookSoceity.vue')
             }
 
         ]
@@ -121,6 +127,14 @@ const routes=[
                 path: '/a1/l9',
                 component: () => import('./admin/ReservationManagement/ReservationList.vue') // 这里根据实际的路径和组件名进行设置
             },
+            {
+                path: '/a1/l10',
+                component: () => import('./admin/ActivityManagement/ActivityList.vue') // 这里根据实际的路径和组件名进行设置
+            },
+            {
+                path: '/a1/l11',
+                component: () => import('./admin/login/ChangePassword.vue') // 这里根据实际的路径和组件名进行设置
+            },
         ]
 
     },
@@ -148,6 +162,10 @@ const routes=[
             {
                 path:'/publisher/l5',
                 component: () => import('./admin/FeedbackManagement/FeedbackToPublisherList.vue') // 这里根据实际的路径和组件名进行设置
+            },
+            {
+                path:'/publisher/l6',
+                component: () => import('./admin/login/ChangePasswordToPublisher.vue') // 这里根据实际的路径和组件名进行设置
             },
         ]
     }

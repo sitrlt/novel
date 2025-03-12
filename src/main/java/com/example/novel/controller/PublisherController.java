@@ -2,10 +2,11 @@ package com.example.novel.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.example.novel.mapper.PublisherMapper;
-import com.example.novel.pojo.Librarian;
-import com.example.novel.pojo.Publisher;
+import com.example.novel.pojo.*;
 import com.example.novel.pojo.Publisher;
 import com.example.novel.service.MD5Get;
+import com.example.novel.service.clientServer;
+import com.example.novel.service.mail;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -66,5 +67,65 @@ public class PublisherController {
     @GetMapping("/findAll")
     public List<Publisher> findAll(){
         return publisherMapper.selectAllPublisher();
+    }
+
+
+    @PostMapping("/forget")
+    public boolean findEmail(@RequestBody Map<String, String> loginData) {
+        String email = loginData.get("email");
+        System.out.println("email"+email);
+        //查找stu
+        List<Publisher> list = publisherMapper.selectAllPublisher();
+        System.out.println(list.get(1));
+        Publisher publishers = new Publisher();
+        for(Publisher r:list)
+        {
+            System.out.println(r.getEmail());
+            if(r.getEmail().equals(email)&&r.getEmail()!=null)
+            {
+                publishers=r;
+            }
+        }
+        if (publishers != null) {
+            mail ma = new mail();
+            clientServer s = new clientServer();
+            String message = s.creatID();
+            local.MESSAGE.put(email,message);//存在本地类
+            ma.sendMail(email, "欢迎使用课程管理系统，这是系统为你生成的验证码：" + message + "。用于修改密码，请勿泄露！", "这是一封来自课程管理系统的验证邮件");
+            return true;
+        } else {
+            return false;
+        }
+    }
+    @PostMapping("/update")
+    public boolean changePassword(@RequestBody Map<String, String> loginData) throws Exception {
+        boolean a = false;
+        String code = loginData.get("code");
+        String email = loginData.get("email");
+        String newPassword = loginData.get("password");
+        System.out.println(local.MESSAGE.get(email));
+        System.out.println(email);
+        if(code.equals(local.MESSAGE.get(email)))//验证码相同
+        {
+            Publisher r=null;
+            List<Publisher> list = publisherMapper.selectAllPublisher();
+            for(Publisher su:list)
+            {
+                if(su.getEmail().equals(email))
+                {
+                    System.out.println(su.getEmail()+email);
+                    r=su;
+                    a=true;
+                    local.MESSAGE.remove(email);
+                }
+            }
+            if(r!=null)
+            {
+                System.out.println("r"+r);
+                r.setPassword(newPassword);
+                publisherMapper.updateById(r);//更新
+            }
+        }
+        return a;
     }
 }

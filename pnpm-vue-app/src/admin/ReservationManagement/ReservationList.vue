@@ -98,6 +98,41 @@ const handleClick = (row) => {
 
   }
 };
+const now = new Date();
+const year = now.getFullYear();
+const month = String(now.getMonth() + 1).padStart(2, '0');
+const day = String(now.getDate()).padStart(2, '0');
+const currentDateString = `${year}-${month}-${day}`;
+const currentDate = new Date(year, month - 1, day);
+const dueDate = new Date(currentDate.getTime());
+dueDate.setDate(dueDate.getDate() + 60);
+
+// 获取计算后的日期的年份、月份和日期
+const dueYear = dueDate.getFullYear();
+const dueMonth = String(dueDate.getMonth() + 1).padStart(2, '0');
+const dueDay = String(dueDate.getDate()).padStart(2, '0');
+
+// 格式化归还日期字符串，只保留年月日
+const dueDateString = `${dueYear}-${dueMonth}-${dueDay}`;
+
+console.log(`借阅日期: ${currentDateString}`);
+console.log(`归还日期: ${dueDateString}`);
+
+const addToReservationList = async (row) => {
+  try {
+    await getData();
+    const reservation = {...row,status:'借阅中',dueDate:dueDateString,borrowDate: currentDateString };
+    console.log(reservation);
+    // 发送添加借阅记录的请求
+    const response = await axios.post("http://localhost:8080/borrowRecord/create", reservation);
+    ElMessage({ type: 'success', message: '添加成功!' });
+    console.log(response.data);
+  } catch (error) {
+    ElMessage.error('添加失败');
+    console.error("请求出错:", error);
+  }
+};
+
 
 const handleSubmit = async () => {
       dialogVisible.value = false
@@ -105,9 +140,8 @@ const handleSubmit = async () => {
       console.log(updatedReservation)
   axios.put(`http://localhost:8080/reservation/uid/${updatedReservation.id}`, updatedReservation)
       .then((response) => {
-        ElMessage({ type: 'success', message: '修改成功!' });
-        getData()
-        dialogForm.value = {}
+        console.log(response.data)
+        addToReservationList(response.data)
       })
       .catch((error) => {
         ElMessage.error('修改失败');

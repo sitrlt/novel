@@ -9,7 +9,7 @@ public class Publisher {
     private String name;
     @TableField("contact_person")
     private String contactPerson;
-    private String phone;
+    private String email;
     private String password;
-
+    private String phone;
 }

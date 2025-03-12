@@ -1,6 +1,6 @@
 <template>
   <div class="topTool" style="width: 98%">
-    <el-input v-model="sname" placeholder="请输入文章名字搜索"
+    <el-input v-model="sname" placeholder="请输入标签搜索"
               @input="handleSearchName" :prefix-icon="Search">
     </el-input>
     <el-button type="primary" :icon="Plus" @click="handleAdd"

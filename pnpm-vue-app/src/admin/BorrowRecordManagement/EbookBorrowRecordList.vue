@@ -71,7 +71,7 @@ const publisherNames = ref([]);
 
 
 
-// 发送请求获取数据
+/*// 发送请求获取数据
 axios.get("http://localhost:8080/EbookBorrowRecord/findAll").then((response) => {
   members = response.data;
   total.value =members.length;
@@ -79,7 +79,7 @@ axios.get("http://localhost:8080/EbookBorrowRecord/findAll").then((response) => 
 }).catch((error) => {
   console.error("请求出错:", error);
   // 处理错误，例如显示错误信息或采取其他措施
-})
+})*/
 // 监听数据变化
 onMounted(() => {
   getData();

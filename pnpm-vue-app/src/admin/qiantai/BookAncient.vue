@@ -71,7 +71,7 @@ axios.get("http://localhost:8080/book/findAll")
       console.log(member.value);
 
       // 筛选出 publisherId 为 '古言' 的书籍
-      members.value = member.value.filter(item => item.labels[0].label === '古言');
+      members.value = member.value.filter(item => item.labels[0]?.label === '古言');
 
       // 按每行数量分组
       for (let i = 0; i < members.value.length; i += booksPerRow) {

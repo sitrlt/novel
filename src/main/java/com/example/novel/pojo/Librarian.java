@@ -10,6 +10,6 @@ public class Librarian {
     @TableField("employee_id")
     private String employeeId;
     private String password;
-    private String contact;
+    private String email;
 
 }

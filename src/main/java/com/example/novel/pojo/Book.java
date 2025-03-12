@@ -31,4 +31,6 @@ public class Book {
     private List<Label> labels;
     @TableField(exist = false)
     private BookInventory bookInventory;
+    @TableField(exist = false)
+    private List<BookReviews> bookReviews;
 }

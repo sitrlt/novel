@@ -6,10 +6,7 @@ import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.novel.mapper.BookInventoryMapper;
 import com.example.novel.mapper.BorrowRecordMapper;
-import com.example.novel.pojo.Book;
-import com.example.novel.pojo.BorrowRecord;
-import com.example.novel.pojo.BorrowRecordDetail;
-import com.example.novel.pojo.Label;
+import com.example.novel.pojo.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,8 +24,8 @@ public class BorrowRecordController {
     private BookInventoryMapper bookInventoryMapper;
 
     @GetMapping("/borrowRecord/findById/{readerId}")
-    public List<BorrowRecordDetail> findByReaderId(@PathVariable("readerId") Integer readerId) {
-        List<BorrowRecordDetail> records = borrowRecordMapper.selectByReaderId(readerId);
+    public List<BorrowRecord> findByReaderId(@PathVariable("readerId") Integer readerId) {
+        List<BorrowRecord> records = borrowRecordMapper.selectByReaderId(readerId);
         if (records == null || records.isEmpty()) {
             return Collections.emptyList(); // 或者返回自定义的错误信息
         }
@@ -36,10 +33,26 @@ public class BorrowRecordController {
     }
 
     @PostMapping("/borrowRecord/create")
-    public void createBorrowRecord(@RequestBody BorrowRecord borrowRecord) {
-            borrowRecordMapper.insertBorrowRecord(borrowRecord);
-    }
+    public String createBorrowRecord(@RequestBody BorrowRecord borrowRecord) {
+        Integer readerId = borrowRecord.getReaderId();
+        String bookIsbn = borrowRecord.getBookIsbn();
 
+        QueryWrapper<BorrowRecord> wrapper = new QueryWrapper<>();
+        wrapper.eq("reader_id", readerId)
+                .eq("book_isbn", bookIsbn);
+
+        long count = borrowRecordMapper.selectCount(wrapper);
+        if (count > 0) {
+            return "该读者与书籍的组合已存在，无需重复插入";
+        } else {
+            boolean result = borrowRecordMapper.insertBorrowRecord(borrowRecord) > 0;
+            if (result) {
+                return "插入成功";
+            } else {
+                return "插入失败";
+            }
+        }
+    }
     @GetMapping("/physicalBorrowRecord/findAll")
     public List<BorrowRecord> find(){
         return borrowRecordMapper.selectAllPhysicalBorrowRecords();
@@ -53,6 +66,16 @@ public class BorrowRecordController {
         queryWrapper.orderByDesc("id"); // 根据id字段降序排序
         page.addOrder(OrderItem.desc("id")); // 添加降序排序条件
         return borrowRecordMapper.selectPageWithPhysicalBorrowRecord(page,null);
+    }
+
+    @GetMapping("/borrowRecord/findByPage")
+    public IPage<BorrowRecord> getBorrowRecordList2(@RequestParam("pageNum") Integer pageNum,//使用 @RequestParam 注解来获取请求参数 pageNum 和 pageSize 的值，
+                                   @RequestParam("pageSize") Integer pageSize,
+                                   @RequestParam int readerId) {//分别表示当前页码和每页数据条数
+        // 创建分页对象
+        Page<BorrowRecord> page = new Page<>(pageNum, pageSize);
+        // 调用 Mapper 方法进行分页查询
+        return borrowRecordMapper.selectPage1(page, readerId);
     }
 
     @GetMapping("/EbookBorrowRecord/findAll")

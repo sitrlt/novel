@@ -72,4 +72,44 @@ public interface FeedbackMapper extends BaseMapper<Feedback> {
     })
     IPage<Feedback> selectPageToPublisher(Page<?> page, @Param("queryWrapper") Wrapper<Feedback> queryWrapper);
 
+
+    @Select("SELECT f.* " +
+            "FROM feedback f " +
+            "JOIN reader r ON r.id = f.reader_id " +  // 注意这里的空格
+            "WHERE f.target_entity = 'admin' and r.username LIKE CONCAT('%', #{keyword}, '%') " +
+            "OR f.content LIKE CONCAT('%', #{keyword}, '%') " +
+            "OR f.admin_response LIKE CONCAT('%', #{keyword}, '%') " +  // 注意这里的空格
+            "OR f.feedback_type LIKE CONCAT('%', #{keyword}, '%')" )
+    @Results({
+            @Result(property = "id", column = "id"),
+            @Result(property = "content", column = "content"),
+            @Result(property = "status", column = "status"),
+            @Result(property = "adminResponse", column = "admin_response"),
+            @Result(property = "targetEntity", column = "target_entity"),
+            @Result(property = "feedbackType", column = "feedback_type"),
+            @Result(column = "reader_id", property = "reader", javaType = Reader.class,
+                    one = @One(select = "com.example.novel.mapper.ReaderMapper.selectById")),
+    })
+    List<Feedback> searchFeedback(@Param("keyword") String keyword);
+
+    @Select("SELECT f.* " +
+            "FROM feedback f " +
+            "JOIN reader r ON r.id = f.reader_id " +  // 注意这里的空格
+            "WHERE f.target_entity = 'publisher' and r.username LIKE CONCAT('%', #{keyword}, '%') " +
+            "OR f.content LIKE CONCAT('%', #{keyword}, '%') " +
+            "OR f.admin_response LIKE CONCAT('%', #{keyword}, '%') " +  // 注意这里的空格
+            "OR f.feedback_type LIKE CONCAT('%', #{keyword}, '%')" )
+    @Results({
+            @Result(property = "id", column = "id"),
+            @Result(property = "content", column = "content"),
+            @Result(property = "status", column = "status"),
+            @Result(property = "adminResponse", column = "admin_response"),
+            @Result(property = "targetEntity", column = "target_entity"),
+            @Result(property = "feedbackType", column = "feedback_type"),
+            @Result(column = "reader_id", property = "reader", javaType = Reader.class,
+                    one = @One(select = "com.example.novel.mapper.ReaderMapper.selectById")),
+    })
+    List<Feedback> searchFeedbackToPublisher(@Param("keyword") String keyword);
+
+
 }

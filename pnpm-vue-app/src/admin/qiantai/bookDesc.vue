@@ -12,14 +12,14 @@
           <img :src="currentBook.coverImage" alt="Book Cover" />
         </div>
         <div class="book-info">
-          <div class="book-header">
+          <div class="book-header" :key="route.params.id">
             <h2 class="book-title">
               {{ currentBook.title }}
               <span class="book-meta">
-          作者：<span class="author-name">{{ currentBook.author }}</span>
-          | 出版日期：<span class="update-time">{{ currentBook.publishDate }}</span>
-          <span v-if="!currentBook.ebook"> | 可借：<span class="update-time">{{ currentBook.bookInventory?.availableCopies }}</span></span>
-        </span>
+                作者：<span class="author-name">{{ currentBook.author }}</span>
+                | 出版日期：<span class="update-time">{{ currentBook.publishDate }}</span>
+                <span v-if="!currentBook.ebook"> | 可借：<span class="update-time">{{ currentBook.bookInventory?.availableCopies }}</span></span>
+              </span>
             </h2>
             <el-tag v-for="tag in currentBook.labels" :key="tag.label">{{tag.label}}</el-tag>
           </div>
@@ -30,7 +30,6 @@
             {{ currentBook.bookInventory?.availableCopies === 0? '加入预约书架' : '加入借书架' }}
           </el-button>
         </div>
-
       </div>
       <div v-else>
         <p>未找到该书籍信息</p>
@@ -42,26 +41,37 @@
           <span class="comment-count" @click="goToCommentSection">评论{{count}}></span>
         </div>
       </div>
+      <!-- 猜你喜欢区域 -->
+      <div class="recommended-books-section">
+        <h2 class="section-title">猜你喜欢</h2>
+        <div class="book-list1">
+          <div class="book-item1" v-for="(book, index) in recommendedBooks" :key="index" @click="goToBookDetail(book.id)">
+            <img :src="book.coverImage" alt="Recommended Book Cover" class="book-cover1" />
+            <p class="book-title1">{{ book.title }}</p>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
+
 <script setup>
-import {ref, onMounted} from 'vue';
-import {ElBreadcrumb, ElBreadcrumbItem, ElMessage} from 'element-plus';
-import {ArrowRight} from '@element-plus/icons-vue';
-import {useRoute} from 'vue-router';
+import { ref, onMounted, computed, watch } from 'vue';
+import { ElBreadcrumb, ElBreadcrumbItem, ElMessage } from 'element-plus';
+import { ArrowRight } from '@element-plus/icons-vue';
+import { useRoute } from 'vue-router';
 import axios from "axios";
 import router from "../../router.js";
+
 function getUserIdFromSessionStorage() {
-  const role ='reader'; // 假设读者角色标识为'reader'
+  const role ='reader';
   const storageKey = `sessionUserId_${role}`;
   return sessionStorage.getItem(storageKey);
 }
-// 在需要获取用户 ID 的地方调用该函数
+
 const id = getUserIdFromSessionStorage();
 if (id) {
   console.log('当前登录读者的用户 ID:', id);
-  // 在这里可以进行后续操作，比如根据用户 ID 进行数据请求等
 } else {
   console.log('未获取到用户 ID，可能用户未登录或会话已过期');
 }
@@ -70,6 +80,7 @@ const route = useRoute();
 const status = ref('待处理');
 const currentBook = ref();
 const bookId = parseInt(route.params.id);
+
 const goToLabel = () => {
   if (currentBook.value.labels[0].label === '古言') {
     router.push('/novel/ancient');
@@ -77,7 +88,7 @@ const goToLabel = () => {
     router.push('/novel/modern');
   }
 };
-// 获取当前时间
+
 const now = new Date();
 const year = now.getFullYear();
 const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -87,35 +98,43 @@ const currentDate = new Date(year, month - 1, day);
 const dueDate = new Date(currentDate.getTime());
 dueDate.setDate(dueDate.getDate() + 60);
 
-// 获取计算后的日期的年份、月份和日期
 const dueYear = dueDate.getFullYear();
 const dueMonth = String(dueDate.getMonth() + 1).padStart(2, '0');
 const dueDay = String(dueDate.getDate()).padStart(2, '0');
 
-// 格式化归还日期字符串，只保留年月日
 const dueDateString = `${dueYear}-${dueMonth}-${dueDay}`;
 
 console.log(`借阅日期: ${currentDateString}`);
 console.log(`归还日期: ${dueDateString}`);
-const getData = () => {
-  axios.get(`http://localhost:8080/book/findById/${bookId}`)
-      .then((response) => {
-        currentBook.value = response.data;
-        console.log(currentBook.value.isbn)
-        if(currentBook.value.ebook === true){
-          status.value = '借阅中'
-        }
-      })
-      .catch((error) => {
-        console.error("请求出错:", error);
-        // 处理错误，例如显示错误信息或采取其他措施
-      });
-}
+
+const getData = async () => {
+  try {
+    const response = await axios.get(`http://localhost:8080/book/findById/${bookId}`);
+    currentBook.value = response.data;
+    updateStatus();
+    return response.data;
+  } catch (error) {
+    console.error("请求出错:", error);
+    return null;
+  }
+};
+
+const updateStatus = () => {
+  if (currentBook.value && currentBook.value.ebook === true) {
+    status.value = '借阅中';
+  } else {
+    status.value = '待处理';
+  }
+};
+
+onMounted(async () => {
+  await getData();
+  await getBookList();
+  getCount();
+});
+
 const addToBorrowList = async () => {
   try {
-    // 等待 getData 函数中的请求完成
-    await getData();
-    // 创建 borrowRecord 对象
     const borrowRecord = {
       readerId: id,
       bookIsbn: currentBook.value.isbn,
@@ -123,11 +142,13 @@ const addToBorrowList = async () => {
       borrowDate: currentDateString,
       status: status.value
     };
-    console.log(borrowRecord);
-    // 发送添加借阅记录的请求
     const response = await axios.post("http://localhost:8080/borrowRecord/create", borrowRecord);
-    ElMessage({ type: 'success', message: '添加成功!' });
-    console.log(response.data);
+    if(response.data === '插入成功') {
+      ElMessage({type: 'success', message: '添加成功!'});
+    }else if(response.data === '该读者与书籍的组合已存在，无需重复插入'){
+      ElMessage.error('不可重复加入借书架');
+    }
+    updateStatus();
   } catch (error) {
     ElMessage.error('添加失败');
     console.error("请求出错:", error);
@@ -137,22 +158,17 @@ const addToBorrowList = async () => {
 
 const goToCommentSection = () => {
   router.push({ name: 'BookReviews', params: { id: bookId } });
-}
+};
 
 const addToReservationList = async () => {
   try {
-    // 等待 getData 函数中的请求完成
-    await getData();
-    // 创建 borrowRecord 对象
     const reservation = {
       readerId: id,
       bookIsbn: currentBook.value.isbn,
     };
-    console.log(reservation);
-    // 发送添加借阅记录的请求
     const response = await axios.post("http://localhost:8080/reservation/create", reservation);
-    ElMessage({type: 'success', message: '添加成功!'});
-    console.log(response.data);
+    ElMessage({ type: 'success', message: '添加成功!' });
+    updateStatus();
   } catch (error) {
     ElMessage.error('添加失败');
     console.error("请求出错:", error);
@@ -161,11 +177,10 @@ const addToReservationList = async () => {
 };
 
 const handleButtonClick = () => {
+
   if (currentBook.value.bookInventory?.availableCopies === 0) {
-    // 加入预约书架的逻辑
     addToReservationList();
   } else {
-    // 加入借书架的逻辑
     addToBorrowList();
   }
 };
@@ -175,19 +190,58 @@ const getCount = () => {
   axios.get(`http://localhost:8080/bookReviews/countByBookId/${bookId}`)
       .then((response) => {
         count.value = response.data;
-        console.log(response.data)
+        console.log(response.data);
       })
       .catch((error) => {
         console.error("请求出错:", error);
-        // 处理错误，例如显示错误信息或采取其他措施
       });
-}
+};
 
-onMounted(() => {
- getData()
-  getCount()
+const bookList = ref([]);
+const getBookList = async () => {
+  try {
+    const response = await axios.get("http://localhost:8080/book/findAll");
+    bookList.value = response.data;
+    console.log("书籍列表数据：", bookList.value);
+    return response.data;
+  } catch (error) {
+    console.error("请求出错:", error);
+    return null;
+  }
+};
+
+const recommendedBooks = computed(() => {
+  if (!currentBook.value ||!currentBook.value.labels || currentBook.value.labels.length === 0) {
+    return [];
+  }
+  const currentBookLabels = currentBook.value.labels.map(label => label.label);
+  return bookList.value.filter(book => {
+    // 使用 id 进行比较
+    return book.id!== currentBook.value.id && book.labels.some(label => currentBookLabels.includes(label.label));
+  }).slice(0, 6);
 });
+
+const goToBookDetail = async (bookId) => {
+  const currentRoute = router.currentRoute.value;
+  try {
+    const response = await axios.get(`http://localhost:8080/book/findById/${bookId}`);
+    currentBook.value = response.data;
+    updateStatus();
+    if (currentRoute.name === 'BookDesc') {
+      router.replace({ name: 'BookDesc', params: { id: bookId } });
+    } else {
+      router.push({ name: 'BookDesc', params: { id: bookId } });
+    }
+  } catch (error) {
+    console.error('获取书籍详情出错:', error);
+  }
+};
+
+watch(currentBook, () => {
+  updateStatus();
+}, { deep: true });
 </script>
+
 <style scoped>
 .main-content {
   display: flex;
@@ -318,4 +372,42 @@ onMounted(() => {
   background-color: white;
   border: 1px solid #f8bbd0; /* 修改边框颜色为橙色 */
 }
+.recommended-books-section {
+  margin-top: 20px;
+  align-items: center;
+  background-color: #fff;
+  padding: 20px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  width: 1000px;
+}
+.section-title {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.book-list1 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.book-item1 {
+  width: calc(33.333% - 20px);
+  box-sizing: border-box;
+  padding: 10px;
+  text-align: center;
+}
+
+.book-cover1 {
+  width: 44%;
+  height: 173px;
+  object-fit: cover;
+}
+
+.book-title1 {
+  font-size: 16px;
+  color: #333;
+}
+
 </style>
