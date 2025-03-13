@@ -19,10 +19,12 @@ public class Book {
     private String publishDate;
     @TableField("publisher_id")
     private int publisherId;
-    @TableField("type_id")
-    private int typeId;
+    @TableField("is_payable")
+    private int isPayable;
     @TableField("ebook_path")
     private String ebookPath;
+    @TableField("borrowing_fee")
+    private String borrowingFee;
     @TableField("is_ebook")
     private boolean isEbook;
     @TableField(exist = false)

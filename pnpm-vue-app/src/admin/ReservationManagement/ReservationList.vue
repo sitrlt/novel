@@ -30,7 +30,7 @@
     <el-table-column prop="status" label="状态" width="120"> </el-table-column>
     <el-table-column label="操作" min-width="350">
       <template #default="{ row }">
-        <el-button class="custom-pink-button" size="small" @click="handleClick(row)" icon="Star">
+        <el-button class="custom-pink-button" size="small"  v-if="(row && row.status!== '已处理')" @click="handleClick(row)" icon="Star">
           {{ row.bookInventory.availableCopies > 0? '可借阅' : '无库存' }}
         </el-button>
         <el-button type="danger" size="small" icon="Delete"

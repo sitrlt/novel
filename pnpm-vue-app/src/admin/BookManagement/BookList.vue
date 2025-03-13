@@ -38,6 +38,11 @@
     </el-table-column>
     <el-table-column prop="publishDate" label="出版日期" width="120"></el-table-column>
     <el-table-column prop="publisher.name" label="出版社名称" width="120"></el-table-column>
+    <el-table-column prop="borrowingFee" label="借阅费用" width="100">
+      <template #default="scope">
+        {{ scope.row.borrowingFee}}<span v-if="scope.row.borrowingFee>0">元</span>
+      </template>
+    </el-table-column>
     <el-table-column label="操作" min-width="300">
       <template #default="{ row }">
         <el-button type="primary" size="small" icon="Edit" class="custom-pink-button"
@@ -107,6 +112,9 @@
       </el-form-item>
       <el-form-item label="简述" :label-width="100">
         <el-input v-model="tableform.description" autocomplete="off"/>
+      </el-form-item>
+      <el-form-item label="借阅费用" :label-width="100">
+        <el-input v-model="tableform.borrowingFee" autocomplete="off"/>
       </el-form-item>
       <el-form-item label="出版时间" :label-width="100">
         <el-date-picker

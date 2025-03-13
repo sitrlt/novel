@@ -36,6 +36,7 @@ public interface ReaderMapper extends BaseMapper<Reader> {
             @Result(property = "email", column = "email"),
             @Result(property = "phone", column = "phone"),
             @Result(property = "address", column = "address"),
+            @Result(property = "accountBalance", column = "account_balance"),
             @Result(property = "registrationDate", column = "registration_date"),
             @Result(property = "coverImage", column = "cover_image"),
             @Result(column = "id", property = "interests", javaType = List.class,

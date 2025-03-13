@@ -354,6 +354,66 @@
               </el-dialog>
             </div>
 
+            <div class="data-item" @mouseenter="hoveredItem = 'accountBalance'" @mouseleave="hoveredItem = null">
+              <span>账户余额: </span>
+              <span v-if="!isEditing.accountBalance">{{ reader.accountBalance }}元</span>
+              <span class="edit-span" v-if="hoveredItem === 'accountBalance' && !isEditing.accountBalance"
+                    @click="openRechargeDialog"><Edit/>充值</span>
+              <!-- 充值弹窗 -->
+              <el-dialog
+                  v-model="rechargeDialogVisible"
+                  title="充值"
+                  width="450px"
+                  :before-close="handleClose"
+              >
+                <div class="payment-method">
+                  <span>选择支付方式</span>
+                  <el-select v-model="selectedPaymentMethod" placeholder="选择支付方式">
+                    <el-option label="微信支付" value="wechatPay"></el-option>
+                    <el-option label="QQ钱包" value="qqPay"></el-option>
+                  </el-select>
+                </div>
+                <div class="recharge-options">
+                  <div
+                      v-for="(option, index) in rechargeOptions"
+                      :key="index"
+                      class="recharge-option"
+                      :class="{ 'active': selectedOption === index }"
+                      @click="selectOption(index)"
+                  >
+                    <p class="price">{{ option }}元</p>
+                  </div>
+                  <div class="recharge-option custom-option" @click="showCustomInput = true">
+                    <p class="price">自定义金额</p>
+                  </div>
+                </div>
+                <el-input
+                    style="margin-top: 10px"
+                    v-if="showCustomInput"
+                    v-model="customAmount"
+                    placeholder="请输入自定义金额"
+                    @blur="hideCustomInput"
+                    @keyup.enter="hideCustomInput"
+                />
+                <el-button
+                    type="primary"
+                    :loading="isLoading"
+                    @click="confirmRecharge"
+                    :disabled="!selectedOption &&!showCustomInput"
+                    style="margin-top: 20px;width: 200px;margin-left: 100px"
+                >
+                  确认协议并以{{ selectedOption!== null? rechargeOptions[selectedOption] : customAmount }}元充值
+                </el-button>
+                <p class="policy-text">
+                  充值前确认
+                  <a href="#">《充值规则》</a>
+                  和
+                  <a href="#">《隐私政策》</a>
+                </p>
+              </el-dialog>
+            </div>
+
+
             <div class="data-item">
                 <span>注册日期: </span>
                 <span>{{ reader.registrationDateStr }}</span>
@@ -613,6 +673,7 @@ const isEditing = ref({
   email: false,
   phone: false,
   address: false,
+  accountBalance:false
 });
 const editData = reader;
 // 使用 ref 来获取 DOM 元素
@@ -1058,6 +1119,97 @@ const handleCurrentChange = (newPage) => {
   fetchNovels();
 };
 
+
+//账户充值
+// 充值弹窗是否可见
+const rechargeDialogVisible = ref(false);
+
+// 选择的支付方式
+const selectedPaymentMethod = ref('wechatPay');
+
+// 充值选项
+const rechargeOptions = [6, 18, 50, 198, 618];
+
+// 选中的充值选项索引
+const selectedOption = ref(null);
+
+// 是否显示自定义金额输入框
+const showCustomInput = ref(false);
+
+// 自定义金额
+const customAmount = ref('');
+
+onMounted(() => {
+  console.log('rechargeOptions:', rechargeOptions);
+});
+// 打开充值弹窗
+const openRechargeDialog = () => {
+  rechargeDialogVisible.value = true;
+};
+
+// 关闭弹窗
+const handleClose = () => {
+  rechargeDialogVisible.value = false;
+  selectedOption.value = null;
+  showCustomInput.value = false;
+  customAmount.value = '';
+};
+
+// 选择充值选项
+const selectOption = (index) => {
+  if (index === rechargeOptions.length) {
+    showCustomInput.value = true;
+    selectedOption.value = null; // 点击自定义金额时，将selectedOption设为null
+  } else {
+    selectedOption.value = index;
+    showCustomInput.value = false;
+  }
+};
+// 隐藏自定义输入框
+const hideCustomInput = () => {
+  showCustomInput.value = false;
+};
+
+// 确认充值
+const confirmRecharge = () => {
+  // 这里可以添加实际的充值逻辑，比如调用后端接口
+  console.log('确认充值，支付方式:', selectedPaymentMethod.value);
+  let rechargeAmount;
+  if (selectedOption.value!== null) {
+    rechargeAmount = rechargeOptions[selectedOption.value];
+  } else {
+    rechargeAmount = parseFloat(customAmount.value);
+    if (isNaN(rechargeAmount)) {
+      ElMessage.error('请输入有效的自定义充值金额');
+      return;
+    }
+  }
+
+  // 计算充值后的账户余额
+  const newBalance = reader.value.accountBalance + rechargeAmount;
+ console.log(newBalance)
+  const updateReader = {
+    ...reader.value,
+    accountBalance: newBalance
+  };
+  axios.put(`http://localhost:8080/reader/uid/${id}`, updateReader)
+      .then((response) => {
+        // 更新本地 reader 对象的账户余额
+        reader.value.accountBalance = newBalance;
+        ElMessage({ type: 'success', message: '充值成功!' });
+      })
+      .catch((error) => {
+        let errorMessage = '充值失败';
+        if (error.response && error.response.data && error.response.data.message) {
+          errorMessage = error.response.data.message;
+        }
+        ElMessage.error(errorMessage);
+        console.error("请求出错:", error);
+      });
+
+  handleClose();
+};
+
 </script>
 
 <style scoped>
@@ -1255,7 +1407,6 @@ const handleCurrentChange = (newPage) => {
 }
 
 .info p {
-  margin: 45px 0;
   color: #666;
 }
 
@@ -1367,7 +1518,7 @@ const handleCurrentChange = (newPage) => {
 }
 
 .message-time {
-  margin-left: 740px;
+  margin-left: 640px;
   color: #999;
 }
 
@@ -1484,6 +1635,51 @@ const handleCurrentChange = (newPage) => {
 .book-actions {
   display: flex;
   gap: 10px;
+}
+.recharge-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 三列布局 */
+  grid-template-rows: repeat(2, auto); /* 两行布局 */
+  grid-gap: 10px; /* 格子之间的间距 */
+  margin-top: 15px;
+}
+
+.recharge-option {
+  width: 100px;
+  height: 50px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 15px;
+  text-align: center;
+  cursor: pointer;
+  background-color: white; /* 每个框背景为白色 */
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); /* 简单的阴影效果 */
+}
+
+.active {
+  border-color: #409eff;
+}
+
+.custom-option {
+  border-style: dashed;
+}
+
+.edit-input {
+  width: 100px;
+}
+
+.policy-text {
+  margin-top: 15px;
+  text-align: center;
+  font-size: 12px;
+}
+
+.policy-text a {
+  color: blue;
+  text-decoration: underline;
+}
+.price{
+  text-align: center;
 }
 
 </style>
