@@ -55,6 +55,10 @@
         >
         </el-date-picker>
       </el-form-item>
+      <el-form-item label="借阅费用" :label-width="100">
+        <el-input v-model="tableform.borrowingFee" autocomplete="off"/>
+      </el-form-item>
+
       <el-form-item class="form-button-item">
         <el-button type="primary" @click="dialogOk">
           确定
@@ -145,7 +149,7 @@ const dialogOk = () => {
 
     uploadFile().then(() => {
       // 确保图片上传成功后再发送添加请求
-      const reformable = {...tableform.value,publisherId:id}
+      const reformable = {...tableform.value,publisherId:id,status:'待审核'}
       console.log(reformable)
       axios.post("http://localhost:8080/book/create", reformable)
           .then((response) => {

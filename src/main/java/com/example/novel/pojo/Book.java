@@ -19,12 +19,16 @@ public class Book {
     private String publishDate;
     @TableField("publisher_id")
     private int publisherId;
-    @TableField("type_id")
-    private int typeId;
+    @TableField("is_payable")
+    private Boolean isPayable;
     @TableField("ebook_path")
     private String ebookPath;
+    @TableField("borrowing_fee")
+    private String borrowingFee;
     @TableField("is_ebook")
-    private boolean isEbook;
+    private Boolean isEbook;
+    @TableField("status")
+    private String status;
     @TableField(exist = false)
     private Publisher publisher; // Publisher 对象
     @TableField(exist = false)

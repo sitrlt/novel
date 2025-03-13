@@ -40,7 +40,19 @@ public interface BookReviewsMapper extends BaseMapper<BookReviews> {
     })
     List<BookReviews> selectByReaderId(@Param("readerId") int readerId);
 
-
+    @Select("SELECT * FROM book_reviews where reader_id = #{readerId}")
+    @Results({
+            @Result(property = "id", column = "id"),
+            @Result(property = "bookId", column = "book_id"),
+            @Result(property = "readText", column = "read_text"),
+            @Result(property = "reviewDate", column = "review_date"),
+            @Result(property = "rating", column = "rating"),
+            @Result(column = "reader_id", property = "reader", javaType = Reader.class,
+                    one = @One(select = "com.example.novel.mapper.ReaderMapper.selectById")),
+            @Result(column = "book_id", property = "book", javaType = Book.class,
+                    one = @One(select = "com.example.novel.mapper.BookMapper.selectById"))
+    })
+    IPage<BookReviews> selectPageWithBookReviews(Page<BookReviews> page, @Param("readerId") Integer readerId);
 
 
 }

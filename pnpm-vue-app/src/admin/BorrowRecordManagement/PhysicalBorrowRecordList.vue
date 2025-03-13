@@ -33,14 +33,14 @@
    <el-table-column label="操作" min-width="350">
       <template #default="{ row }">
         <el-button
-            :type="row && row.book &&!row.book.ebook && row.status === '待处理'? 'primary' : 'danger'"
+            :type="row && row.book && row.status === '待处理'? 'primary' : 'danger'"
             size="small"
-            :icon="row && row.book &&!row.book.ebook && row.status === '待处理'? 'Star' : ''"
+            :icon="row && row.book && row.status === '待处理'? 'Star' : ''"
             class="custom-pink-button"
-            @click="row && row.book &&!row.book.ebook && row.status === '待处理'? checkInventoryAndBorrow(row) : rejectBorrowRequest(row)"
-            v-if="(row && row.book &&!row.book.ebook && row.status === '待处理') || row.status === '已逾期'"
+            @click="row && row.book  && row.status === '待处理'? checkInventoryAndBorrow(row) : rejectBorrowRequest(row)"
+            v-if="(row && row.book  && row.status === '待处理') || row.status === '已逾期'"
         >
-          {{ row && row.book &&!row.book.ebook && row.status === '待处理'? '同意借阅' : '归还提醒' }}
+          {{ row && row.book && row.status === '待处理'? '同意借阅' : '归还提醒' }}
         </el-button>
         <el-button type="danger" size="small" icon="Delete"
                    @click="onDelete(row)">删除
@@ -188,6 +188,21 @@ const leEdit = async (row) => {
   try {
     // 表单数据设置为传入行数据，并更新状态为借阅中
     tableform.value = { ...row, status: '借阅中' };
+    const readerRequest = await axios.get(`http://localhost:8080/reader/findById/${tableform.value.readerId}`);
+    const reader = readerRequest.data;
+    const bookRequest = await axios.get(`http://localhost:8080/book/findById/${tableform.value.book.id}`);
+    const book = bookRequest.data;
+    console.log("读者信息",readerRequest.data);
+    console.log("书籍信息",bookRequest.data);
+
+    // 检查余额是否足够
+    if (reader.accountBalance < book.borrowingFee) {
+      ElMessage.error('账户余额不足，请先充值。');
+      return;
+    }
+    // 扣除余额
+    reader.accountBalance -= book.borrowingFee;
+    await axios.put(`http://localhost:8080/reader/uid/${tableform.value.readerId}`, reader);
     // 发送修改请求
     const response = await axios.put(
         `http://localhost:8080/borrowRecord/count/${tableform.value.id}`,

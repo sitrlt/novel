@@ -77,6 +77,24 @@
       </div>
     </div>
   </div>
+  <!-- 弹窗：编辑爱好 -->
+  <el-dialog v-model="isEditDialogVisible" title="编辑爱好">
+    <div>
+      <h3>已有爱好</h3>
+      <el-tag v-for="(interest, index) in currentReader.interests" :key="interest.id" closable @close="deleteInterest(interest.id)">
+        {{ interest.label }}
+      </el-tag>
+    </div>
+    <div>
+      <h3>所有标签类型</h3>
+      <el-tag v-for="(label, index) in allLabels" :key="index" @click="addInterest(label.id)">
+        {{ label.label }}
+      </el-tag>
+    </div>
+    <template #footer>
+      <el-button @click="closeEditDialog">关闭</el-button>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup>
@@ -136,21 +154,24 @@ const bookGroups = ref([]);
 const booksPerRow = 3;
 const recommendBooks = ref([]);
 
-// 发送请求获取数据
-axios.get(`http://localhost:8080/book/interests/${id}`)
-    .then((response) => {
-      members.value = response.data.slice(0, 9);
-      console.log(members.value)
-      // 数据获取成功后进行分组操作
-      recommendBooks.value= response.data.slice(10,24)
-      for (let i = 0; i < members.value.length; i += booksPerRow) {
-        bookGroups.value.push(members.value.slice(i, i + booksPerRow));
-      }
-    })
-    .catch((error) => {
-      console.error("请求出错:", error);
-      // 处理错误，例如显示错误信息或采取其他措施
-    });
+
+const getBook = () => {
+  // 发送请求获取数据
+  axios.get(`http://localhost:8080/book/interests/${id}`)
+      .then((response) => {
+        members.value = response.data.slice(0, 9);
+        console.log(members.value)
+        // 数据获取成功后进行分组操作
+        recommendBooks.value= response.data.slice(10,24)
+        for (let i = 0; i < members.value.length; i += booksPerRow) {
+          bookGroups.value.push(members.value.slice(i, i + booksPerRow));
+        }
+      })
+      .catch((error) => {
+        console.error("请求出错:", error);
+        // 处理错误，例如显示错误信息或采取其他措施
+      });
+}
 const goToBookDetail = (bookId) => {
   router.push({name: 'BookDesc', params: {id: bookId}});
 };
@@ -173,6 +194,7 @@ const getActivity = () => {
 const getClickHandler = (activityId) => {
     router.push({ name: 'new', params: { id: activityId } })
 };
+
 
 
 //轮播图
@@ -204,8 +226,10 @@ onMounted(() => {
       startCarousel();
     }
   });
+  getBook()
   getActivity()
-
+  getLabel()
+  getReader()
 });
 
 onUnmounted(() => {
@@ -218,6 +242,87 @@ onUnmounted(() => {
     }
   });
 });
+
+// 个人爱好
+// 所有标签类型
+const currentReader = ref();
+// 获取用户数据
+const getReader = async () => {
+  try {
+    const response = await axios.get(`http://localhost:8080/reader/findById/${id}`);
+    currentReader.value = response.data;
+    await checkReaderInterests()
+    console.log("获取到的用户数据:", currentReader.value);
+  } catch (error) {
+    console.error("获取用户数据失败:", error);
+  }
+};
+const allLabels = ref([]);
+const getLabel = () => {
+  // 发送请求获取数据
+  axios.get("http://localhost:8080/label/findAll").then((response) => {
+    allLabels.value = response.data;
+    console.log(allLabels.value)
+  }).catch((error) => {
+    console.error("请求出错:", error);
+    // 处理错误，例如显示错误信息或采取其他措施
+  })
+}
+// 控制编辑弹窗显示状态
+const isEditDialogVisible = ref(false);
+// 关闭弹窗并重新加载用户数据
+const closeEditDialog = () => {
+  isEditDialogVisible.value = false;
+  getReader(); // 重新加载用户数据
+  getBook()
+};
+// 删除爱好
+const deleteInterest = (id) => {
+  axios.delete(`http://localhost:8080/interests/labelId/${id}`)
+      .then(() => {
+        currentReader.value.interests = currentReader.value.interests.filter(interest => interest.id!== id);
+        ElMessage({type: 'success', message: '完成删除！',})
+      })
+      .catch((error) => {
+        ElMessage.error('删除爱好失败，请稍后重试');
+      });
+};
+
+// 添加爱好
+const addInterest = (labelId) => {
+  const labelObj = allLabels.value.find((label) => label.id === labelId);
+  const label = labelObj ? labelObj.label : '';
+  const isExist = currentReader.value.interests.some((interest) => interest.label === label);
+
+  const interest = {
+    labelId: labelId,
+    readerId: id
+  };
+  if (!isExist) {
+    axios
+        .post('http://localhost:8080/interests/create', interest)
+        .then((response) => {
+          getReader()
+          console.log(response.data)
+          ElMessage({ type: 'success', message: '添加成功!' });
+        })
+        .catch((error) => {
+          ElMessage.error('添加失败');
+          console.error('请求出错:', error);
+        });
+  }else{
+    ElMessage.error('已添加，请添加其他');
+  }
+};
+
+// 检查读者兴趣标签是否为空
+const checkReaderInterests = async () => {
+  console.log(currentReader.value)
+  if (currentReader.value.interests.length === 0) {
+    isEditDialogVisible.value = true;
+  }
+};
+
 </script>
 
 <style scoped>
@@ -266,12 +371,11 @@ onUnmounted(() => {
   width: 100%;
   background-color: rgba(0, 0, 0, 0.5);
   color: white;
-  padding: 5px 0;
 }
 
 .banner-text span {
   cursor: pointer;
-  padding: 5px 25px;
+  padding: 5px 12px;
   transition: background-color 0.3s ease;
 }
 
@@ -398,5 +502,11 @@ onUnmounted(() => {
 .recommend-genre {
   margin-right: 5px;
   color: #f8bbd0;
+}
+.el-tag {
+  margin-left: 10px;
+  color: #f8bbd0;
+  background-color: #f9f4f8;
+  border: 1px solid #f8bbd0;
 }
 </style>

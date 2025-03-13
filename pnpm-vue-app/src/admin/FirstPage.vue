@@ -14,9 +14,10 @@
       </div>
       <p class="subtext">{{ item.subtext }}</p>
     </div>
+    <div class="borrow">
     <div id="bookBorrowChart" style="width: 600px; height: 400px;"></div>
     <div id="dayBorrowChart" style="width: 600px; height: 400px;"></div>
-
+    </div>
   </div>
 </template>
 
@@ -243,5 +244,8 @@ body{
   margin-top: 5px;
   font-size: 14px;
   color: #666;
+}
+.borrow{
+  display: flex;
 }
 </style>

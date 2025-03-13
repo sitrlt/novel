@@ -53,16 +53,21 @@ public interface BookMapper extends BaseMapper<Book> {
             @Result(property = "publishDate", column = "publish_date"),
             @Result(property = "ebookPath", column = "ebook_path"),
             @Result(property = "isEbook", column = "is_ebook"),
+            @Result(property = "isPayable", column = "is_payable"),
+            @Result(property = "status", column = "status"),
+            @Result(property = "borrowingFee", column = "borrowing_fee"),
             @Result(column = "publisher_id", property = "publisher", javaType = Publisher.class,
                     one = @One(select = "com.example.novel.mapper.PublisherMapper.selectById")),
             @Result(column = "id", property = "labels", javaType = List.class,
                     many = @Many(select = "com.example.novel.mapper.LabelMapper.selectLabelsByBookId")),
-            @Result(column = "isbn",property = "bookInventory",javaType = BookInventory.class,
+            @Result(column = "isbn", property = "bookInventory", javaType = BookInventory.class,
                     one = @One(select = "com.example.novel.mapper.BookInventoryMapper.selectByIsbn"))
     })
     Book selectByIsbn(String isbn);
+
     @Select("select * from `book`")
     public List<Book> selectAllUserAndOrders();
+
     @Select("SELECT COUNT(*) FROM book WHERE id = #{id}")
     int existsById(@Param("id") int id);
 
@@ -78,14 +83,19 @@ public interface BookMapper extends BaseMapper<Book> {
             @Result(property = "publishDate", column = "publish_date"),
             @Result(property = "ebookPath", column = "ebook_path"),
             @Result(property = "isEbook", column = "is_ebook"),
+            @Result(property = "isPayable", column = "is_payable"),
+            @Result(property = "status", column = "status"),
+
+            @Result(property = "borrowingFee", column = "borrowing_fee"),
             @Result(column = "publisher_id", property = "publisher", javaType = Publisher.class,
                     one = @One(select = "com.example.novel.mapper.PublisherMapper.selectById")),
             @Result(column = "id", property = "labels", javaType = List.class,
                     many = @Many(select = "com.example.novel.mapper.LabelMapper.selectLabelsByBookId")),
-            @Result(property = "bookInventory", column = "isbn",javaType = BookInventory.class,
+            @Result(property = "bookInventory", column = "isbn", javaType = BookInventory.class,
                     one = @One(select = "com.example.novel.mapper.BookInventoryMapper.selectByIsbn"))
     })
     Book selectBookById(@Param("id") int id);
+
     @Select("SELECT * FROM book")
     @Results({
             @Result(property = "id", column = "id"),
@@ -98,14 +108,18 @@ public interface BookMapper extends BaseMapper<Book> {
             @Result(property = "publishDate", column = "publish_date"),
             @Result(property = "ebookPath", column = "ebook_path"),
             @Result(property = "isEbook", column = "is_ebook"),
+            @Result(property = "isPayable", column = "is_payable"),
+            @Result(property = "status", column = "status"),
+            @Result(property = "borrowingFee", column = "borrowing_fee"),
             @Result(column = "publisher_id", property = "publisher", javaType = Publisher.class,
                     one = @One(select = "com.example.novel.mapper.PublisherMapper.selectById")),
             @Result(column = "id", property = "labels", javaType = List.class,
                     many = @Many(select = "com.example.novel.mapper.LabelMapper.selectLabelsByBookId")),
-            @Result(column = "isbn",property = "bookInventory",javaType = BookInventory.class,
+            @Result(column = "isbn", property = "bookInventory", javaType = BookInventory.class,
                     one = @One(select = "com.example.novel.mapper.BookInventoryMapper.selectByIsbn"))
     })
     List<Book> selectAllBookAndPublisher();
+
     @Select("SELECT * FROM book")
     @Results({
             @Result(property = "id", column = "id"),
@@ -118,6 +132,9 @@ public interface BookMapper extends BaseMapper<Book> {
             @Result(property = "publishDate", column = "publish_date"),
             @Result(property = "ebookPath", column = "ebook_path"),
             @Result(property = "isEbook", column = "is_ebook"),
+            @Result(property = "status", column = "status"),
+            @Result(property = "isPayable", column = "is_payable"),
+            @Result(property = "borrowingFee", column = "borrowing_fee"),
             @Result(column = "publisher_id", property = "publisher", javaType = Publisher.class,
                     one = @One(select = "com.example.novel.mapper.PublisherMapper.selectById")),
             @Result(column = "id", property = "labels", javaType = List.class,
@@ -138,6 +155,9 @@ public interface BookMapper extends BaseMapper<Book> {
             @Result(property = "coverImage", column = "cover_image"),
             @Result(property = "publishDate", column = "publish_date"),
             @Result(property = "ebookPath", column = "ebook_path"),
+            @Result(property = "isPayable", column = "is_payable"),
+            @Result(property = "status", column = "status"),
+            @Result(property = "borrowingFee", column = "borrowing_fee"),
             @Result(property = "isEbook", column = "is_ebook"),
             @Result(column = "publisher_id", property = "publisher", javaType = Publisher.class,
                     one = @One(select = "com.example.novel.mapper.PublisherMapper.selectById")),
@@ -147,6 +167,7 @@ public interface BookMapper extends BaseMapper<Book> {
                     one = @One(select = "com.example.novel.mapper.BookInventoryMapper.selectByIsbn"))
     })
     List<Book> selectAllBookToPublisher(@Param("publisherId") int publisherId);
+
     @Select("SELECT * FROM book where publisher_id = #{publisherId}")
     @Results({
             @Result(property = "id", column = "id"),
@@ -159,6 +180,9 @@ public interface BookMapper extends BaseMapper<Book> {
             @Result(property = "publishDate", column = "publish_date"),
             @Result(property = "ebookPath", column = "ebook_path"),
             @Result(property = "isEbook", column = "is_ebook"),
+            @Result(property = "status", column = "status"),
+            @Result(property = "isPayable", column = "is_payable"),
+            @Result(property = "borrowingFee", column = "borrowing_fee"),
             @Result(column = "publisher_id", property = "publisher", javaType = Publisher.class,
                     one = @One(select = "com.example.novel.mapper.PublisherMapper.selectById")),
             @Result(column = "id", property = "labels", javaType = List.class,
@@ -181,6 +205,9 @@ public interface BookMapper extends BaseMapper<Book> {
             @Result(property = "title", column = "title"),
             @Result(property = "author", column = "author"),
             @Result(property = "description", column = "description"),
+            @Result(property = "isPayable", column = "is_payable"),
+            @Result(property = "borrowingFee", column = "borrowing_fee"),
+            @Result(property = "status", column = "status"),
             @Result(property = "publisherId", column = "publisher_id"),
             @Result(property = "publisher", column = "publisher_id",
                     one = @One(select = "com.example.novel.mapper.PublisherMapper.selectById"))
@@ -192,4 +219,22 @@ public interface BookMapper extends BaseMapper<Book> {
     IPage<Book> searchBooks1(Page<Book> page, @Param("keyword") String keyword);
 
 
+    @Select("<script>" +
+            "SELECT DISTINCT b.* FROM book b " +
+            "JOIN book_labels bl ON b.id = bl.book_id " +
+            "JOIN label l ON bl.label_id = l.id " +
+            "<where>" +
+            "<if test='label!= null and label!= \"\"'>" +
+            "l.label = #{label} " +
+            "</if>" +
+            "<if test='isPayable != null'>" +
+            "and b.is_payable = #{isPayable} " +
+            "</if>" +
+            "<if test='isEbook != null'>" +
+            "and b.is_ebook = #{isEbook} " +
+            "</if>" +
+            "</where>" +
+            "ORDER BY b.id DESC" +
+            "</script>")
+    IPage<Book> selectPageWithLabel(Page<Book> page, @Param("label") String label, @Param("isPayable") Boolean isPayable, @Param("isEbook") Boolean isEbook);
 }

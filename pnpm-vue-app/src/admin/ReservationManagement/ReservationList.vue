@@ -30,7 +30,7 @@
     <el-table-column prop="status" label="状态" width="120"> </el-table-column>
     <el-table-column label="操作" min-width="350">
       <template #default="{ row }">
-        <el-button class="custom-pink-button" size="small" @click="handleClick(row)" icon="Star">
+        <el-button class="custom-pink-button" size="small"  v-if="(row && row.status!== '已处理')" @click="handleClick(row)" icon="Star">
           {{ row.bookInventory.availableCopies > 0? '可借阅' : '无库存' }}
         </el-button>
         <el-button type="danger" size="small" icon="Delete"
@@ -121,12 +121,26 @@ console.log(`归还日期: ${dueDateString}`);
 const addToReservationList = async (row) => {
   try {
     await getData();
+    const readerRequest = await axios.get(`http://localhost:8080/reader/findById/${row.readerId}`);
+    // 获取响应数据
+    const reader = readerRequest.data;
+    console.log(readerRequest.data)
+    // 扣除余额
+    reader.accountBalance -= row.book.borrowingFee;
+    // 模拟更新读者账户余额到后端
+    await axios.put(`http://localhost:8080/reader/uid/${row.readerId}`, reader);
+    // 加入借书架
     const reservation = {...row,status:'借阅中',dueDate:dueDateString,borrowDate: currentDateString };
     console.log(reservation);
     // 发送添加借阅记录的请求
+    // 发送修改请求
+    const response1 = await axios.put(`http://localhost:8080/borrowRecord/count/${row.id}`, row);
     const response = await axios.post("http://localhost:8080/borrowRecord/create", reservation);
+
     ElMessage({ type: 'success', message: '添加成功!' });
     console.log(response.data);
+    console.log("库存减少",response1.data);
+    getData()
   } catch (error) {
     ElMessage.error('添加失败');
     console.error("请求出错:", error);

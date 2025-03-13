@@ -19,6 +19,8 @@ public class Reader {
    private java.sql.Timestamp registrationDate;
    @TableField("cover_image")
    private String coverImage;
+   @TableField("account_balance")
+   private int accountBalance;
    @TableField(exist = false)
    private List<Book> books; // Publisher 对象
    @TableField(exist = false)

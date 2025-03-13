@@ -18,10 +18,12 @@
               <span class="book-meta">
                 作者：<span class="author-name">{{ currentBook.author }}</span>
                 | 出版日期：<span class="update-time">{{ currentBook.publishDate }}</span>
-                <span v-if="!currentBook.ebook"> | 可借：<span class="update-time">{{ currentBook.bookInventory?.availableCopies }}</span></span>
+                <span v-if="!currentBook.isEbook"> | 可借：<span class="update-time">{{ currentBook.bookInventory?.availableCopies }}</span></span>
               </span>
             </h2>
             <el-tag v-for="tag in currentBook.labels" :key="tag.label">{{tag.label}}</el-tag>
+            <el-tag v-if="currentBook.isPayable">付费:{{currentBook.borrowingFee}}元</el-tag>
+            <el-tag v-else>免费</el-tag>
           </div>
           <div class="book-synopsis">
             <p>{{ currentBook.description }}</p>
@@ -57,7 +59,7 @@
 
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue';
-import { ElBreadcrumb, ElBreadcrumbItem, ElMessage } from 'element-plus';
+import {ElBreadcrumb, ElBreadcrumbItem, ElMessage, ElMessageBox} from 'element-plus';
 import { ArrowRight } from '@element-plus/icons-vue';
 import { useRoute } from 'vue-router';
 import axios from "axios";
@@ -120,7 +122,7 @@ const getData = async () => {
 };
 
 const updateStatus = () => {
-  if (currentBook.value && currentBook.value.ebook === true) {
+  if (currentBook.value && currentBook.value.isEbook === true) {
     status.value = '借阅中';
   } else {
     status.value = '待处理';
@@ -176,15 +178,72 @@ const addToReservationList = async () => {
   console.log('加入预约书架:', currentBook.value);
 };
 
-const handleButtonClick = () => {
-
+const handleButtonClick = async () => {
+  const readerRequest = await axios.get(`http://localhost:8080/reader/findById/${id}`);
+  // 获取响应数据
+  const reader = readerRequest.data;
+  console.log(readerRequest.data);
+  // 检查余额是否足够
+  if (reader.accountBalance < currentBook.value.borrowingFee) {
+    ElMessage.error('账户余额不足，请先充值。');
+    return;
+  }
   if (currentBook.value.bookInventory?.availableCopies === 0) {
-    addToReservationList();
+    await addToReservationList();
   } else {
-    addToBorrowList();
+    if (currentBook.value.isPayable) {
+      if (currentBook.value.isEbook) {
+        try {
+          // 弹出确认对话框
+          await ElMessageBox.confirm(
+              '该书籍为付费借阅，确认是否借阅？',
+              '确认借阅',
+              {
+                confirmButtonText: '确认',
+                cancelButtonText: '取消',
+                type: 'warning'
+              }
+          );
+
+          // 扣除余额
+          reader.accountBalance -= currentBook.value.borrowingFee;
+          // 模拟更新读者账户余额到后端
+          await axios.put(`http://localhost:8080/reader/uid/${id}`, reader);
+          // 加入借书架
+          await addToBorrowList();
+          ElMessage.success('借阅成功，已加入借书架。');
+        } catch (error) {
+          // 用户取消借阅
+          if (error === 'cancel') {
+            ElMessage.info('已取消借阅。');
+          }
+        }
+      } else {
+        // 实体书待处理
+        await ElMessageBox.confirm(
+            '该书籍为付费借阅，管理员处理完自动扣费',
+            '确认借阅',
+            {
+              confirmButtonText: '确认',
+              cancelButtonText: '取消',
+              type: 'warning'
+            }
+        );
+        // 检查余额是否足够
+        if (reader.accountBalance < currentBook.value.borrowingFee) {
+          ElMessage.error('账户余额不足，请先充值。');
+          return;
+        }
+        await addToBorrowList();
+      }
+    } else {
+      // 免费书籍直接加入借书架
+      await addToBorrowList();
+      ElMessage.success('借阅成功，已加入借书架。');
+    }
+
   }
 };
-
 const count = ref(0);
 const getCount = () => {
   axios.get(`http://localhost:8080/bookReviews/countByBookId/${bookId}`)

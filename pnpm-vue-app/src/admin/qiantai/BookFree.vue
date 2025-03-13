@@ -18,11 +18,17 @@
       </div>
       <!-- 属性筛选 -->
       <div class="filter-group">
-        <div class="filter-title">属性</div>
         <div class="filter-options">
           <span :class="{ active: selectedProperty === '全部' }" @click="toggleProperty('全部')">全部</span>
           <span :class="{ active: selectedProperty === '免费' }" @click="toggleProperty('免费')">免费</span>
           <span :class="{ active: selectedProperty === 'VIP' }" @click="toggleProperty('VIP')">VIP</span>
+        </div>
+      </div>
+      <div class="filter-group">
+        <div class="filter-options">
+          <span :class="{ active: selectedEbook === '全部' }" @click="toggleEbook('全部')">全部</span>
+          <span :class="{ active: selectedEbook === '电子书' }" @click="toggleEbook('电子书')">电子书</span>
+          <span :class="{ active: selectedEbook === '实体书' }" @click="toggleEbook('实体书')">实体书</span>
         </div>
       </div>
     </div>
@@ -72,20 +78,14 @@ import axios from 'axios';
 import router from "../../router.js";
 
 // 左侧筛选条件的响应式数据
-const selectedGender = ref('女生');
 const selectedCategory = ref('全部');
-const selectedStatus = ref('全部');
 const selectedProperty = ref('全部');
-const selectedWordCount = ref('全部');
-const selectedUpdateTime = ref('全部');
-// 右侧排序条件的响应式数据
-const selectedSort = ref('综合');
-// 分页相关数据
+const selectedEbook = ref('全部');
 const currentPage = ref(1);
-const pageSize = ref(12);
+const pageSize = ref(9);
 const total = ref(0);
 const displayedItems = ref([]);
-const booksPerRow = 4;
+const booksPerRow = 3;
 // 发送请求获取数据
 const member = ref([]);
 // 存储 label 表的数据
@@ -111,10 +111,16 @@ const getLabels = async () => {
 // 获取数据的方法
 const getData = () => {
   let payable;
+  let ebook;
   if (selectedProperty.value === '免费') {
     payable = false;
   } else if (selectedProperty.value === 'VIP') {
     payable = true;
+  }
+  if(selectedEbook.value === '实体书'){
+    ebook = false
+  }else if(selectedEbook.value === '电子书'){
+    ebook = true
   }
 
   const params = {
@@ -128,6 +134,9 @@ const getData = () => {
 
   if (selectedProperty.value!== '全部') {
     params.isPayable = payable;
+  }
+  if (selectedEbook.value!== '全部') {
+    params.isEbook = ebook;
   }
 
   console.log('请求参数:', params);
@@ -161,7 +170,10 @@ const toggleProperty = (property) => {
   selectedProperty.value = property;
   getData();
 };
-
+const toggleEbook = (ebook) => {
+  selectedEbook.value = ebook;
+  getData();
+}
 // 处理页码变化点击事件
 const handleCurrentChange = (pageNum) => {
   currentPage.value = pageNum;
@@ -252,7 +264,7 @@ onMounted(async () => {
 }
 
 .book-item {
-  width: calc(25% - 10px); /* 一行显示四本，每本宽度为 25% 减去间距 */
+  width: calc(40% - 10px); /* 一行显示四本，每本宽度为 25% 减去间距 */
   display: flex;
   background-color: white;
   padding: 10px;

@@ -222,4 +222,18 @@ public class BookController {
     }
 
 
+    @GetMapping("/book/label/findByPage")
+    public IPage<Book> getBookListLabel(
+            @RequestParam("pageNum") Integer pageNum,
+            @RequestParam("pageSize") Integer pageSize,
+            @RequestParam(value = "label", required = false) String label,
+            @RequestParam(value = "isPayable", required = false) Boolean isPayable,
+            @RequestParam(value = "isEbook", required = false) Boolean isEbook
+
+    ) {
+        // 创建一个 Page 对象，用于分页查询。传入 pageNum 和 pageSize 参数来指定当前页码和每页数据条数
+        Page<Book> page = new Page<>(pageNum, pageSize);
+
+        return bookMapper.selectPageWithLabel(page, label, isPayable,isEbook);
+    }
 }

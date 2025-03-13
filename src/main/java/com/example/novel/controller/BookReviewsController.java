@@ -1,5 +1,7 @@
 package com.example.novel.controller;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.novel.mapper.BookReviewsMapper;
 import com.example.novel.pojo.Book;
 import com.example.novel.pojo.BookReviews;
@@ -39,6 +41,16 @@ public class BookReviewsController {
     @DeleteMapping("/bookReviews/id/{id}")
     public int delBookReviews(@PathVariable("id") int id){
         return bookReviewsMapper.deleteById(id);
+    }
+
+    @GetMapping("/bookReviews/findByPage")
+    public IPage<BookReviews> getBookReviewsList(@RequestParam("pageNum") Integer pageNum,//使用 @RequestParam 注解来获取请求参数 pageNum 和 pageSize 的值，
+                                   @RequestParam("pageSize") Integer pageSize,
+                                   @RequestParam int readerId) {//分别表示当前页码和每页数据条数
+        // 创建分页对象
+        Page<BookReviews> page = new Page<>(pageNum, pageSize);
+        // 调用 Mapper 方法进行分页查询
+        return bookReviewsMapper.selectPageWithBookReviews(page, readerId);
     }
 
 }

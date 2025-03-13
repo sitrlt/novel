@@ -22,6 +22,13 @@
     <el-table-column prop="isbn" label="ISBN" width="200"></el-table-column>
     <el-table-column prop="title" label="文章" width="230"></el-table-column>
     <el-table-column prop="author" label="作者" width="100"></el-table-column>
+    <el-table-column prop="status" label="状态" width="100"></el-table-column>
+    <el-table-column prop="borrowingFee" label="借阅费用" width="100">
+
+      <template #default="scope">
+        {{ scope.row.borrowingFee}}<span v-if="scope.row.borrowingFee>0">元</span>
+      </template>
+    </el-table-column>
     <el-table-column fixed label="封面" width="100">
       <template #default="scope">
         <el-image :src="scope.row.coverImage" fit="contain">
@@ -115,8 +122,11 @@
             value-format="YYYY-MM-DD">
         </el-date-picker>
       </el-form-item>
-      <el-form-item label="出版社id" :label-width="100">
-        <el-input v-model="tableform.publisherId" autocomplete="off"/>
+      <el-form-item label="借阅费用" :label-width="100">
+        <el-input v-model="tableform.borrowingFee" autocomplete="off"/>
+      </el-form-item>
+      <el-form-item label="状态" :label-width="100">
+        <el-input v-model="tableform.status" autocomplete="off"/>
       </el-form-item>
     </el-form>
     <template #footer>
@@ -184,15 +194,16 @@ const dialogTitle = computed(() => {//设置弹窗的标题
 })
 const id = localStorage.getItem('publisherId');  // Retrieve the username from route parametersRetrieve the username from route parameters
 console.log(id)
-/*// 发送请求获取数据
-axios.get(`http://localhost:8080/bookToPublisher/findAll/${id}`).then((response) => {
-  members = response.data;
-  total.value =members.length;
-  displayedItems.value = members; // 更新ref变量的值\
-}).catch((error) => {
-  console.error("请求出错:", error);
-  // 处理错误，例如显示错误信息或采取其他措施
-})*/
+const publishers = ref([]);
+
+const getPublisher = () => {
+  axios.get("http://localhost:8080/publishers/findAll").then((response) => {
+    publishers.value = response.data;
+  }).catch((error) => {
+    console.error("请求出错:", error);
+    // 处理错误，例如显示错误信息或采取其他措施
+  })
+}
 
 
 const handleCoverChange = (file) => {
@@ -252,6 +263,8 @@ const uploadFile = () => {
 // 监听数据变化
 onMounted(() => {
   getData();
+  getPublisher();
+
 })
 
 // 监听sex属性的变化，并更新表单

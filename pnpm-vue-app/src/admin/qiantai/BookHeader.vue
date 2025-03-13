@@ -72,6 +72,10 @@ const menuData = ref([
     path: '/novel/ranking',
   },
   {
+    text: '免费',
+    path: '/novel/free',
+  },
+  {
     text: '古言',
     path: '/novel/ancient',
   },
@@ -111,17 +115,18 @@ const searchQuery = ref('');
 const route = useRoute(); // 使用 vue-router 的 useRouter 钩子
 const router = useRouter(); // 使用 vue-router 的 useRouter 钩子
 const currentReader = ref();
-onMounted(() => {
-
-  axios.get(`http://localhost:8080/reader/findById/${id}`)
-      .then((response) => {
-        currentReader.value = response.data;
-        console.log(currentReader.value)
-      })
-      .catch((error) => {
-        console.error("请求出错:", error);
-        // 处理错误，例如显示错误信息或采取其他措施
-      });
+// 获取用户数据
+const getReader = async () => {
+  try {
+    const response = await axios.get(`http://localhost:8080/reader/findById/${id}`);
+    currentReader.value = response.data;
+    console.log("获取到的用户数据:", currentReader.value);
+  } catch (error) {
+    console.error("获取用户数据失败:", error);
+  }
+};
+onMounted( () => {
+   getReader()
 });
 const goToShelf = () => {
     router.push({name: 'BookShelf', params: {id: currentReader.value.id}});
@@ -138,6 +143,7 @@ const handleSearch = () => {
     router.push({ path: '/novel/search-results', query: { keyword: searchQuery.value } });
   }
 };
+
 </script>
 
 <style scoped>
@@ -230,4 +236,5 @@ a {
   color: white;
   border-bottom: 1px solid gray;
 }
+
 </style>

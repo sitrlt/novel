@@ -36,8 +36,13 @@
     <el-table-column prop="password" label="密码" width="100"></el-table-column>
     <el-table-column prop="email" label="邮箱" width="200"></el-table-column>
     <el-table-column prop="address" label="地址" width="150"></el-table-column>
-    <el-table-column prop="registrationDateStr" label="注册日期" width="200"></el-table-column>
     <el-table-column prop="phone" label="手机号" width="120"></el-table-column>
+    <el-table-column prop="accountBalance" label="账户余额" width="120">
+      <template #default="scope">
+        {{ scope.row.accountBalance}}<span v-if="scope.row.accountBalance>0">元</span>
+      </template>
+    </el-table-column>
+    <el-table-column prop="registrationDateStr" label="注册日期" width="200"></el-table-column>
     <el-table-column label="操作" min-width="180">
       <template #default="{ row }">
         <el-button type="primary" size="small" icon="Edit" class="custom-pink-button"
@@ -104,6 +109,9 @@
       </el-form-item>
       <el-form-item label="地址" :label-width="100">
         <el-input v-model="tableform.address" autocomplete="off"/>
+      </el-form-item>
+      <el-form-item label="账户余额" :label-width="100">
+        <el-input v-model="tableform.accountBalance" autocomplete="off"/>
       </el-form-item>
     </el-form>
     <template #footer>

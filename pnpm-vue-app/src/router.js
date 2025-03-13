@@ -86,7 +86,12 @@ const routes=[
                 path: '/novel/society',
                 name: 'BookSociety',
                 component:()=>import('./admin/qiantai/BookSoceity.vue')
-            }
+            },
+            {
+                path: '/novel/free',
+                name: 'BookFree',
+                component:()=>import('./admin/qiantai/BookFree.vue')
+            },
 
         ]
     },

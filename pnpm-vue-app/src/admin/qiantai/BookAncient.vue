@@ -32,31 +32,6 @@ import {ref, onMounted, onUnmounted, reactive} from 'vue';
 import axios from "axios";
 import router from "../../router.js";
 
-
-const carouselItems = ref([
-  {
-    image: 'https://bossaudioandcomic-1252317822.image.myqcloud.com/activity/document/4ca01de4a024a119fe4c35e344cc128d.jpg',
-    title: '师妹的修炼方法它'
-  },
-  {
-    image: 'https://bossaudioandcomic-1252317822.image.myqcloud.com/activity/document/7c434406aeff36eb350e3b706237f160.jpg',
-    title: '将军，夫人又去给'
-  },
-  {
-    image: 'https://bossaudioandcomic-1252317822.image.myqcloud.com/activity/document/7cf1696363f5099007c00dc261caa40e.jpg',
-    title: '清冷美人总腿软，'
-  },
-  {
-    image: 'https://bossaudioandcomic-1252317822.image.myqcloud.com/activity/document/bbf9902537c3486211fbaf1d66d53676.jpg',
-    title: '钓系公主不追了，'
-  },
-  {
-    image: 'https://bossaudioandcomic-1252317822.image.myqcloud.com/activity/document/4cec405b9b825c5f8e644a049109088a.jpg',
-    title: '与前男友在婚礼上'
-  }
-]);
-
-
 let members = ref([])
 // 发送请求获取数据
 
@@ -71,7 +46,7 @@ axios.get("http://localhost:8080/book/findAll")
       console.log(member.value);
 
       // 筛选出 publisherId 为 '古言' 的书籍
-      members.value = member.value.filter(item => item.labels[0]?.label === '古言');
+      members.value = member.value.filter(item => item.labels[0]?.label === '古代言情');
 
       // 按每行数量分组
       for (let i = 0; i < members.value.length; i += booksPerRow) {

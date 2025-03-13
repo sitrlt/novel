@@ -38,6 +38,12 @@
     </el-table-column>
     <el-table-column prop="publishDate" label="出版日期" width="120"></el-table-column>
     <el-table-column prop="publisher.name" label="出版社名称" width="120"></el-table-column>
+    <el-table-column prop="status" label="状态" width="100"></el-table-column>
+    <el-table-column prop="borrowingFee" label="借阅费用" width="100">
+      <template #default="scope">
+        {{ scope.row.borrowingFee}}<span v-if="scope.row.borrowingFee>0">元</span>
+      </template>
+    </el-table-column>
     <el-table-column label="操作" min-width="300">
       <template #default="{ row }">
         <el-button type="primary" size="small" icon="Edit" class="custom-pink-button"
@@ -56,7 +62,7 @@
   <el-pagination
       v-model:current-page="currentPage"
       v-model:page-size="pageSize"
-      :page-sizes="[4,10,15,20]"
+      :page-sizes="[5,10,15,20]"
       :total="total"
       layout="sizes,prev, pager, next"
       @current-change="handleCurrentChange"
@@ -108,6 +114,12 @@
       <el-form-item label="简述" :label-width="100">
         <el-input v-model="tableform.description" autocomplete="off"/>
       </el-form-item>
+      <el-form-item label="借阅费用" :label-width="100">
+        <el-input v-model="tableform.borrowingFee" autocomplete="off"/>
+      </el-form-item>
+      <el-form-item label="状态" :label-width="100">
+        <el-input v-model="tableform.status" autocomplete="off"/>
+      </el-form-item>
       <el-form-item label="出版时间" :label-width="100">
         <el-date-picker
             v-model="tableform.publishDate"
@@ -128,7 +140,22 @@
           </el-option>
         </el-select>
       </el-form-item>
+      <div class="tag-form">
+      <div>
+        <h3>已有标签</h3>
+        <el-tag v-for="(interest, index) in tableform.labels" :key="interest.id"  closable @close="deleteInterest(interest.id)">
+          {{ interest.label }}
+        </el-tag>
+      </div>
+      <div>
+        <h3>所有标签类型</h3>
+        <el-tag v-for="(label, index) in allLabels" :key="index" @click="addInterest(label.id)">
+          {{ label.label}}
+        </el-tag>
+      </div>
+      </div>
     </el-form>
+
     <template #footer>
     <span class="dialog-footer">
       <el-button type="primary" @click="dialogOk">
@@ -182,7 +209,7 @@ import {ElMessage, ElMessageBox} from 'element-plus'
 // 创建响应式数据
 let members = reactive([])
 let currentPage = ref(1);// 定义当前页码初始值为1
-let pageSize = ref(4);// 定义每页显示的数据条数为5
+let pageSize = ref(5);// 定义每页显示的数据条数为5
 let total = ref(0);// 初始化数据总条数
 let displayedItems = ref(members.slice(0, pageSize));//初始化当前页显示数据
 const dialogFormVisible = ref(false)//初始化弹窗不显示
@@ -215,7 +242,49 @@ axios.get("http://localhost:8080/book/findAll").then((response) => {
   // 处理错误，例如显示错误信息或采取其他措施
 })
 */
+// 所有标签类型
+const allLabels = ref([]);
+const label = ref()
+const getLabel = () => {
+  // 发送请求获取数据
+  axios.get("http://localhost:8080/label/findAll").then((response) => {
+    allLabels.value = response.data;
+    console.log(allLabels.value)
+  }).catch((error) => {
+    console.error("请求出错:", error);
+    // 处理错误，例如显示错误信息或采取其他措施
+  })
+}
 
+const labelsToDelete = [];
+
+const deleteInterest = (id) => {
+  const labelIndex = tableform.value.labels.findIndex(label => label.id === id);
+  if (labelIndex!== -1) {
+    // 标记该标签为待删除
+    tableform.value.labels[labelIndex].toDelete = true;
+    // 复制要删除的标签到新数组
+    labelsToDelete.push(tableform.value.labels[labelIndex]);
+    // 从原数组中移除该标签
+    tableform.value.labels.splice(labelIndex, 1);
+  }
+};
+// 添加爱好
+const addInterest = (labelId) => {
+  const labelObj = allLabels.value.find((label) => label.id === labelId);
+  const label = labelObj? labelObj.label : '';
+  const isExist = tableform.value.labels.some((label1) => label1.label === label);
+  if (!isExist) {
+    if (!tableform.value.newLabels) {
+      tableform.value.newLabels = [];
+    }
+    tableform.value.newLabels.push(labelId);
+    // 新增代码：将标签对象添加到已有标签数组中
+    tableform.value.labels.push({ id: labelId, label: label });
+  } else {
+    ElMessage.error('已添加，请添加其他');
+  }
+};
 
 const handleCoverChange = (file) => {
   const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
@@ -275,6 +344,7 @@ const uploadFile = () => {
 onMounted(() => {
   getData();
   getPublisher();
+  getLabel()
 })
 
 // 监听sex属性的变化，并更新表单
@@ -342,25 +412,50 @@ const handleAdd = () => { //箭头函数
   dialogType.value = 'add';
   tableform.value = {}
 }
-//判断ID是否存在
-const inputId = () => {
-  const isDuplicate = members.some(member => member.id === tableform.value.id)
-  if (isDuplicate) {
-    ElMessageBox({
-      title: 'Duplicate ID',
-      message: '你输入的ID已存在，请重新输入！！！',
-      type: 'warning',
-      showCancelButton: false,
-      confirmButtonText: 'OK',
-      customClass: 'my-message-box' // 自定义样式类名
-    });
-    return false
-  }
-  return true;
-}
+
 //创建弹窗确定按钮事件dialogOk
-const dialogOk = () => {
+const dialogOk = async () => {
   dialogFormVisible.value = false; // 关闭对话框
+
+  // 先处理删除标签逻辑
+  const deletePromises = labelsToDelete.map(label => {
+    return axios.delete(`http://localhost:8080/bookLabels/delete`, {
+      params: {
+        labelId: label.id,
+        bookId: tableform.value.id
+      }
+    })
+        .then(() => {
+          ElMessage({ type: 'success', message: '标签删除成功！' });
+        })
+        .catch((error) => {
+          console.error('标签删除请求出错:', error);
+          ElMessage.error('标签删除失败');
+        });
+  });
+
+  await Promise.all(deletePromises);
+
+  // 再处理添加标签逻辑
+  const newLabels = tableform.value.newLabels || [];
+  const addPromises = newLabels.map(labelId => {
+    const labelObj = allLabels.value.find((label) => label.id === labelId);
+    const label = labelObj? labelObj.label : '';
+    const booLabel = {
+      labelId: labelId,
+      bookId: tableform.value.id
+    };
+    return axios.post('http://localhost:8080/bookLabels/create', booLabel)
+        .then((response) => {
+          ElMessage({ type:'success', message: '标签添加成功!' });
+        })
+        .catch((error) => {
+          console.error('标签添加请求出错:', error);
+          ElMessage.error('标签添加失败');
+        });
+  });
+
+  await Promise.all(addPromises);
 
   if (dialogType.value === 'add') {
     // 添加数据的逻辑
@@ -368,7 +463,7 @@ const dialogOk = () => {
       // 确保图片上传成功后再发送添加请求
       axios.post("http://localhost:8080/book/create", tableform.value)
           .then(() => {
-            ElMessage({type: 'success', message: '添加成功!'});
+            ElMessage({ type:'success', message: '添加成功!'});
             getData(); // 重新获取数据
           })
           .catch((error) => {
@@ -387,7 +482,7 @@ const dialogOk = () => {
         // 确保图片上传成功后再发送修改请求
         axios.put(`http://localhost:8080/book/uid/${tableform.value.id}`, tableform.value)
             .then(() => {
-              ElMessage({type: 'success', message: '修改成功!'});
+              ElMessage({ type:'success', message: '修改成功!'});
               getData(); // 重新获取数据
             })
             .catch((error) => {
@@ -402,7 +497,7 @@ const dialogOk = () => {
       // 如果没有新的图片文件，直接发送修改请求
       axios.put(`http://localhost:8080/book/uid/${tableform.value.id}`, tableform.value)
           .then(() => {
-            ElMessage({type: 'success', message: '修改成功!'});
+            ElMessage({ type:'success', message: '修改成功!'});
             getData(); // 重新获取数据
           })
           .catch((error) => {
@@ -545,5 +640,18 @@ const handleDelList = () => {
   background-color: #faa3c1;
   color: white;
   border: none;
+}
+.el-tag {
+  margin-left: 10px;
+  color: #f8bbd0;
+  background-color: white;
+  border: 1px solid #f8bbd0;
+}
+.tag-form{
+  margin-left: 35px;
+}
+.tag-form h3{
+  font-size: 13px;
+  color: #606266;
 }
 </style>
