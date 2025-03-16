@@ -1248,6 +1248,97 @@ const confirmRecharge = () => {
   handleClose();
 };
 
+
+//账户充值
+// 充值弹窗是否可见
+const rechargeDialogVisible = ref(false);
+
+// 选择的支付方式
+const selectedPaymentMethod = ref('wechatPay');
+
+// 充值选项
+const rechargeOptions = [6, 18, 50, 198, 618];
+
+// 选中的充值选项索引
+const selectedOption = ref(null);
+
+// 是否显示自定义金额输入框
+const showCustomInput = ref(false);
+
+// 自定义金额
+const customAmount = ref('');
+
+onMounted(() => {
+  console.log('rechargeOptions:', rechargeOptions);
+});
+// 打开充值弹窗
+const openRechargeDialog = () => {
+  rechargeDialogVisible.value = true;
+};
+
+// 关闭弹窗
+const handleClose = () => {
+  rechargeDialogVisible.value = false;
+  selectedOption.value = null;
+  showCustomInput.value = false;
+  customAmount.value = '';
+};
+
+// 选择充值选项
+const selectOption = (index) => {
+  if (index === rechargeOptions.length) {
+    showCustomInput.value = true;
+    selectedOption.value = null; // 点击自定义金额时，将selectedOption设为null
+  } else {
+    selectedOption.value = index;
+    showCustomInput.value = false;
+  }
+};
+// 隐藏自定义输入框
+const hideCustomInput = () => {
+  showCustomInput.value = false;
+};
+
+// 确认充值
+const confirmRecharge = () => {
+  // 这里可以添加实际的充值逻辑，比如调用后端接口
+  console.log('确认充值，支付方式:', selectedPaymentMethod.value);
+  let rechargeAmount;
+  if (selectedOption.value!== null) {
+    rechargeAmount = rechargeOptions[selectedOption.value];
+  } else {
+    rechargeAmount = parseFloat(customAmount.value);
+    if (isNaN(rechargeAmount)) {
+      ElMessage.error('请输入有效的自定义充值金额');
+      return;
+    }
+  }
+
+  // 计算充值后的账户余额
+  const newBalance = reader.value.accountBalance + rechargeAmount;
+ console.log(newBalance)
+  const updateReader = {
+    ...reader.value,
+    accountBalance: newBalance
+  };
+  axios.put(`http://localhost:8080/reader/uid/${id}`, updateReader)
+      .then((response) => {
+        // 更新本地 reader 对象的账户余额
+        reader.value.accountBalance = newBalance;
+        ElMessage({ type: 'success', message: '充值成功!' });
+      })
+      .catch((error) => {
+        let errorMessage = '充值失败';
+        if (error.response && error.response.data && error.response.data.message) {
+          errorMessage = error.response.data.message;
+        }
+        ElMessage.error(errorMessage);
+        console.error("请求出错:", error);
+      });
+
+  handleClose();
+};
+
 </script>
 
 <style scoped>
