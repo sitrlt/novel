@@ -177,22 +177,7 @@ const handleAdd = () => { //箭头函数
   dialogType.value = 'add';
   tableform.value = {}
 }
-//判断ID是否存在
-const inputId = () => {
-  const isDuplicate = members.some(member => member.id === tableform.value.id)
-  if (isDuplicate) {
-    ElMessageBox({
-      title: 'Duplicate ID',
-      message: '你输入的ID已存在，请重新输入！！！',
-      type: 'warning',
-      showCancelButton: false,
-      confirmButtonText: 'OK',
-      customClass: 'my-message-box' // 自定义样式类名
-    });
-    return false
-  }
-  return true;
-}
+
 //创建弹窗确定按钮事件dialogOk
 const dialogOk = () => {
   dialogFormVisible.value = false; // 关闭对话框

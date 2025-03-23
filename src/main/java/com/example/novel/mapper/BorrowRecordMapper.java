@@ -21,6 +21,7 @@ public interface BorrowRecordMapper extends BaseMapper<BorrowRecord> {
             @Result(property = "dueDate", column = "due_date"),
             @Result(property = "returnDate", column = "return_date"),
             @Result(property = "borrowDate", column = "borrow_date"),
+            @Result(property = "borrowingFee", column = "borrowing_fee"),
             @Result(property = "status", column = "status"),
             @Result(column = "book_isbn", property = "book", javaType = Book.class,
                     one = @One(select = "com.example.novel.mapper.BookMapper.selectByIsbn")),
@@ -31,8 +32,8 @@ public interface BorrowRecordMapper extends BaseMapper<BorrowRecord> {
     })
     List<BorrowRecord> selectByReaderId(@Param("readerId") Integer readerId);
 
-    @Insert("INSERT INTO borrow_record (reader_id, book_isbn, due_date, return_date, borrow_date, fine,status) " +
-            "VALUES (#{readerId}, #{bookIsbn}, #{dueDate}, #{returnDate}, #{borrowDate}, #{fine},#{status})")
+    @Insert("INSERT INTO borrow_record (reader_id, book_isbn, due_date, return_date, borrow_date, fine,status,borrowing_fee) " +
+            "VALUES (#{readerId}, #{bookIsbn}, #{dueDate}, #{returnDate}, #{borrowDate}, #{fine},#{status},#{borrowingFee})")
     int insertBorrowRecord(BorrowRecord borrowRecord);
 
 
@@ -49,6 +50,7 @@ public interface BorrowRecordMapper extends BaseMapper<BorrowRecord> {
             @Result(property = "dueDate", column = "due_date"),
             @Result(property = "returnDate", column = "return_date"),
             @Result(property = "borrowDate", column = "borrow_date"),
+            @Result(property = "borrowingFee", column = "borrowing_fee"),
             @Result(property = "status", column = "status"),
             @Result(column = "book_isbn", property = "book", javaType = Book.class,
                     one = @One(select = "com.example.novel.mapper.BookMapper.selectByIsbn")),
@@ -68,6 +70,7 @@ public interface BorrowRecordMapper extends BaseMapper<BorrowRecord> {
             @Result(property = "dueDate", column = "due_date"),
             @Result(property = "returnDate", column = "return_date"),
             @Result(property = "borrowDate", column = "borrow_date"),
+            @Result(property = "borrowingFee", column = "borrowing_fee"),
             @Result(property = "status", column = "status"),
             @Result(column = "book_isbn", property = "book", javaType = Book.class,
                     one = @One(select = "com.example.novel.mapper.BookMapper.selectByIsbn")),
@@ -92,6 +95,7 @@ public interface BorrowRecordMapper extends BaseMapper<BorrowRecord> {
             @Result(property = "dueDate", column = "due_date"),
             @Result(property = "returnDate", column = "return_date"),
             @Result(property = "borrowDate", column = "borrow_date"),
+            @Result(property = "borrowingFee", column = "borrowing_fee"),
             @Result(property = "status", column = "status"),
             @Result(column = "book_isbn", property = "book", javaType = Book.class,
                     one = @One(select = "com.example.novel.mapper.BookMapper.selectByIsbn")),
@@ -111,6 +115,7 @@ public interface BorrowRecordMapper extends BaseMapper<BorrowRecord> {
             @Result(property = "dueDate", column = "due_date"),
             @Result(property = "returnDate", column = "return_date"),
             @Result(property = "borrowDate", column = "borrow_date"),
+            @Result(property = "borrowingFee", column = "borrowing_fee"),
             @Result(property = "status", column = "status"),
             @Result(column = "book_isbn", property = "book", javaType = Book.class,
                     one = @One(select = "com.example.novel.mapper.BookMapper.selectByIsbn")),
@@ -130,6 +135,7 @@ public interface BorrowRecordMapper extends BaseMapper<BorrowRecord> {
             @Result(property = "bookIsbn", column = "book_isbn"),
             @Result(property = "dueDate", column = "due_date"),
             @Result(property = "returnDate", column = "return_date"),
+            @Result(property = "borrowingFee", column = "borrowing_fee"),
             @Result(property = "borrowDate", column = "borrow_date"),
             @Result(property = "status", column = "status"),
             @Result(column = "book_isbn", property = "book", javaType = Book.class,
@@ -148,6 +154,7 @@ public interface BorrowRecordMapper extends BaseMapper<BorrowRecord> {
             @Result(property = "dueDate", column = "due_date"),
             @Result(property = "returnDate", column = "return_date"),
             @Result(property = "borrowDate", column = "borrow_date"),
+            @Result(property = "borrowingFee", column = "borrowing_fee"),
             @Result(property = "status", column = "status"),
             @Result(column = "book_isbn", property = "book", javaType = Book.class,
                     one = @One(select = "com.example.novel.mapper.BookMapper.selectByIsbn")),
@@ -171,6 +178,7 @@ public interface BorrowRecordMapper extends BaseMapper<BorrowRecord> {
             @Result(property = "dueDate", column = "due_date"),
             @Result(property = "returnDate", column = "return_date"),
             @Result(property = "borrowDate", column = "borrow_date"),
+            @Result(property = "borrowingFee", column = "borrowing_fee"),
             @Result(property = "status", column = "status"),
             @Result(property = "fine", column = "fine"),
             @Result(column = "book_isbn", property = "book", javaType = Book.class,
@@ -182,7 +190,7 @@ public interface BorrowRecordMapper extends BaseMapper<BorrowRecord> {
     })
     List<BorrowRecord> searchBorrowRecordsByKeyword(@Param("keyword") String keyword);
 
-    @Update("UPDATE borrow_record SET status = #{status} WHERE id = #{id}")
+    @Update("UPDATE borrow_record SET status = #{status}, WHERE id = #{id}")
     int updateBorrowRecordStatus(BorrowRecord borrowRecord);
 
     /**
@@ -198,6 +206,7 @@ public interface BorrowRecordMapper extends BaseMapper<BorrowRecord> {
             @Result(property = "returnDate", column = "return_date"),
             @Result(property = "borrowDate", column = "borrow_date"),
             @Result(property = "status", column = "status"),
+            @Result(property = "borrowingFee", column = "borrowing_fee"),
             @Result(property = "fine", column = "fine"),
             @Result(column = "book_isbn", property = "book", javaType = Book.class,
                     one = @One(select = "com.example.novel.mapper.BookMapper.selectByIsbn")),
@@ -228,5 +237,26 @@ public interface BorrowRecordMapper extends BaseMapper<BorrowRecord> {
             "GROUP BY DATE(br.borrow_date)")
     List<Map<String, Object>> countBorrowsByDay();
 
+    @Select({
+            "SELECT l.label, COUNT(br.book_isbn) AS borrow_count",
+            "FROM borrow_record br",
+            "JOIN book b ON br.book_isbn = b.isbn",
+            "JOIN book_labels bl ON b.id = bl.book_id",
+            "JOIN label l ON bl.label_id = l.id",
+            "JOIN publisher p ON b.publisher_id = p.id",
+            "WHERE p.id = #{id}",
+            "GROUP BY l.label"
+    })
+    List<Map<String, Object>> countBorrowsByPublisherId(@Param("id") int id);
 
+    @Select({
+            "SELECT DATE(br.borrow_date) AS borrow_date, ",
+            "       SUM(br.borrowing_fee) AS daily_sales ",
+            "FROM borrow_record br ",
+            "JOIN book b ON br.book_isbn = b.isbn ",
+            "JOIN publisher p ON b.publisher_id = p.id ",
+            "WHERE p.id = #{id} ",
+            "GROUP BY DATE(br.borrow_date)"
+    })
+    List<Map<String, Object>> getDailySales(@Param("id") int id);
 }

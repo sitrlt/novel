@@ -18,6 +18,8 @@ public class BorrowRecord {
     private String returnDate; // 实际还书日期
     @TableField("borrow_date")
     private String borrowDate; // 借书日期
+    @TableField("borrowing_fee")
+    private int borrowingFee;
     private String status; // 状态
     private Double fine; // 罚款
     @TableField(exist = false)

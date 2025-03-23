@@ -25,6 +25,11 @@
     <el-table-column prop="book.title" label="文章" width="250" fixed></el-table-column>
     <el-table-column prop="borrowDate" label="借阅日期" width="120"></el-table-column>
     <el-table-column prop="dueDate" label="应还日期" width="150"> </el-table-column>
+    <el-table-column prop="borrowingFee" label="借阅费用" width="100">
+      <template #default="scope">
+        {{ scope.row.borrowingFee}}<span v-if="scope.row.borrowingFee>0">元</span>
+      </template>
+    </el-table-column>
     <el-table-column prop="returnDate" label="归还日期" width="120"> </el-table-column>
     <el-table-column prop="status" label="状态" width="120"> </el-table-column>
     <el-table-column label="操作" min-width="350">

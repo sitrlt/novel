@@ -221,6 +221,20 @@ public class BookController {
         return stats;
     }
 
+    @GetMapping("/bookAllByPublisher/total/{publisherId}")
+    public BookStatsDto getBookStatsByPublisherId(@PathVariable("publisherId")int publisherId) {
+        BookStatsDto stats = new BookStatsDto();
+        // 假设你有对应的 Mapper 方法来获取各项数据
+        stats.setTotal(bookMapper.getTotalBookCountByPublisher(publisherId));
+        stats.setBorrowing(bookMapper.getBorrowingBookCountByPublisher(publisherId));
+        stats.setBorrowingCount(bookMapper.getBorrowingPersonCountByPublisher(publisherId));
+        stats.setReturned(bookMapper.getReturnedBookCountByPublisher(publisherId));
+        stats.setReturnedCount(bookMapper.getReturnedPersonCountByPublisher(publisherId));
+        stats.setOverdue(bookMapper.getOverdueBookCountByPublisher(publisherId));
+        stats.setOverdueCount(bookMapper.getOverduePersonCountByPublisher(publisherId));
+        return stats;
+    }
+
 
     @GetMapping("/book/label/findByPage")
     public IPage<Book> getBookListLabel(

@@ -78,7 +78,6 @@ const handleSignUp = () => {
       console.log(response.data.id);
       ElMessage({type: 'success', message: '登录成功!',})
       console.log(response.data)
-      //router.push({ name: 'novel', params: { id: response.data.id } });
        router.push('/novel/shouye');
     })
   }else{
@@ -91,7 +90,8 @@ const handleSignUp = () => {
       console.log(response.data.id)
       ElMessage({type: 'success', message: '登录成功!',})
       console.log(response.data)
-      localStorage.setItem('publisherId', response.data.id);
+      const role ='publisher';
+      setUserIdInSessionStorage(role, response.data.id);
       router.push('/publisher');
     })
   }

@@ -10,8 +10,6 @@ import com.example.novel.pojo.BookInventory;
 import com.example.novel.pojo.Label;
 import com.example.novel.pojo.Publisher;
 import org.apache.ibatis.annotations.*;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
@@ -23,8 +21,23 @@ public interface BookMapper extends BaseMapper<Book> {
     @Select("SELECT COUNT(*) FROM book")
     int getTotalBookCount();
 
+    @Select("SELECT COUNT(*) FROM book where publisher_id = #{publisherId}")
+    int getTotalBookCountByPublisher(@Param("publisherId") int publisherId);
+
+    @Select("SELECT COUNT(*) FROM borrow_record br " +
+            "JOIN book b ON br.book_isbn = b.isbn " +
+            "JOIN publisher p ON b.publisher_id = p.id " +
+            "WHERE p.id = #{publisherId} AND br.status = '借阅中'")
+    int getBorrowingBookCountByPublisher(@Param("publisherId") int publisherId);
+
     @Select("SELECT COUNT(*) FROM borrow_record WHERE status = '借阅中'")
     int getBorrowingBookCount();
+
+    @Select("SELECT COUNT(DISTINCT reader_id) FROM borrow_record br " +
+            "JOIN book b ON br.book_isbn = b.isbn " +
+            "JOIN publisher p ON b.publisher_id = p.id " +
+            "WHERE p.id = #{publisherId} AND br.status = '借阅中'")
+    int getBorrowingPersonCountByPublisher(@Param("publisherId") int publisherId);
 
     @Select("SELECT COUNT(DISTINCT reader_id) FROM borrow_record WHERE status = '借阅中'")
     int getBorrowingPersonCount();
@@ -32,14 +45,39 @@ public interface BookMapper extends BaseMapper<Book> {
     @Select("SELECT COUNT(*) FROM borrow_record WHERE status = '已归还'")
     int getReturnedBookCount();
 
+    @Select("SELECT COUNT(*) FROM borrow_record br " +
+            "JOIN book b ON br.book_isbn = b.isbn " +
+            "JOIN publisher p ON b.publisher_id = p.id " +
+            "WHERE p.id = #{publisherId} AND br.status = '已归还'")
+    int getReturnedBookCountByPublisher(@Param("publisherId") int publisherId);
+
+
     @Select("SELECT COUNT(DISTINCT reader_id) FROM borrow_record WHERE status = '已归还'")
     int getReturnedPersonCount();
+
+    @Select("SELECT COUNT(DISTINCT reader_id) FROM borrow_record br " +
+            "JOIN book b ON br.book_isbn = b.isbn " +
+            "JOIN publisher p ON b.publisher_id = p.id " +
+            "WHERE p.id = #{publisherId} AND br.status = '已归还'")
+    int getReturnedPersonCountByPublisher(@Param("publisherId") int publisherId);
 
     @Select("SELECT COUNT(*) FROM borrow_record WHERE status = '已逾期'")
     int getOverdueBookCount();
 
+    @Select("SELECT COUNT(*) FROM borrow_record br " +
+            "JOIN book b ON br.book_isbn = b.isbn " +
+            "JOIN publisher p ON b.publisher_id = p.id " +
+            "WHERE p.id = #{publisherId} AND br.status = '已逾期'")
+    int getOverdueBookCountByPublisher(@Param("publisherId") int publisherId);
+
     @Select("SELECT COUNT(DISTINCT reader_id) FROM borrow_record WHERE status = '已逾期'")
     int getOverduePersonCount();
+
+    @Select("SELECT COUNT(DISTINCT reader_id) FROM borrow_record br " +
+            "JOIN book b ON br.book_isbn = b.isbn " +
+            "JOIN publisher p ON b.publisher_id = p.id " +
+            "WHERE p.id = #{publisherId} AND br.status = '已逾期'")
+    int getOverduePersonCountByPublisher(@Param("publisherId") int publisherId);
 
     @Select("SELECT DISTINCT * FROM `book` WHERE isbn = #{isbn}")
     @Results({

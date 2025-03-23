@@ -27,6 +27,11 @@
     <el-table-column prop="borrowDate" label="借阅日期" width="120"></el-table-column>
     <el-table-column prop="dueDate" label="应还日期" width="150"> </el-table-column>
     <el-table-column prop="returnDate" label="归还日期" width="120"> </el-table-column>
+    <el-table-column prop="borrowingFee" label="借阅费用" width="100">
+      <template #default="scope">
+        {{ scope.row.borrowingFee}}<span v-if="scope.row.borrowingFee>0">元</span>
+      </template>
+    </el-table-column>
     <el-table-column prop="bookInventory.totalCopies" label="总数量" width="120"> </el-table-column>
     <el-table-column prop="bookInventory.availableCopies" label="可借数量" width="120"> </el-table-column>
     <el-table-column prop="status" label="状态" width="120"> </el-table-column>
@@ -187,7 +192,11 @@ const checkInventoryAndBorrow = async (row) => {
 const leEdit = async (row) => {
   try {
     // 表单数据设置为传入行数据，并更新状态为借阅中
-    tableform.value = { ...row, status: '借阅中' };
+    let borrowingFee = row.book.borrowingFee
+    tableform.value = { ...row, status: '借阅中',borrowingFee: borrowingFee};
+    // 打印 borrowingFee 的值
+    console.log(row.book.borrowingFee);
+    console.log(tableform.value.book.borrowingFee)
     const readerRequest = await axios.get(`http://localhost:8080/reader/findById/${tableform.value.readerId}`);
     const reader = readerRequest.data;
     const bookRequest = await axios.get(`http://localhost:8080/book/findById/${tableform.value.book.id}`);

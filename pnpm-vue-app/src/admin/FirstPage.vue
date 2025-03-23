@@ -90,6 +90,12 @@ const getBook = () => {
             text: '借阅排行前八',
             left: 'center'
           },
+          tooltip: {
+            trigger: 'axis',
+            axisPointer: {
+              type: 'shadow'
+            }
+          },
           xAxis: {
             data: topBookNames,
             axisLabel: {
@@ -126,6 +132,7 @@ const getDay = () => {
   axios.get('http://localhost:8080/borrow/statistics/day')
       .then(response => {
         const data = response.data;
+        console.log(data)
         // 初始化 ECharts 实例，注意这里将容器 ID 修改为对应每日统计图表的 ID
         const chart = echarts.init(document.getElementById('dayBorrowChart'));
         const option = {

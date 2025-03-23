@@ -24,7 +24,7 @@ public class Book {
     @TableField("ebook_path")
     private String ebookPath;
     @TableField("borrowing_fee")
-    private String borrowingFee;
+    private int borrowingFee;
     @TableField("is_ebook")
     private Boolean isEbook;
     @TableField("status")

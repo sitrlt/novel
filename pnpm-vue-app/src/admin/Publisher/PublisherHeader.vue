@@ -28,7 +28,21 @@ import {ElMessage} from "element-plus";
 import {onMounted, ref} from "vue";
 import router from "../../router.js";
 const currentPublisher = ref(null);
-const id = localStorage.getItem('publisherId');  // Retrieve the username from route parametersRetrieve the username from route parameters
+function getUserIdFromSessionStorage() {
+  const role ='publisher'; // 假设读者角色标识为'reader'
+  const storageKey = `sessionUserId_${role}`;
+  return sessionStorage.getItem(storageKey);
+}
+
+// 在需要获取用户 ID 的地方调用该函数
+const id = getUserIdFromSessionStorage();
+
+if (id) {
+  console.log('当前登录出版社的用户 ID:', id);
+  // 在这里可以进行后续操作，比如根据用户 ID 进行数据请求等
+} else {
+  console.log('未获取到用户 ID，可能用户未登录或会话已过期');
+}
 onMounted(() => {
   console.log(id)
   axios.get(`http://localhost:8080/publishers/findById/${id}`)

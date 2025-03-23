@@ -142,7 +142,8 @@ const addToBorrowList = async () => {
       bookIsbn: currentBook.value.isbn,
       dueDate: dueDateString,
       borrowDate: currentDateString,
-      status: status.value
+      status: status.value,
+      borrowingFee:currentBook.value.borrowingFee
     };
     const response = await axios.post("http://localhost:8080/borrowRecord/create", borrowRecord);
     if(response.data === '插入成功') {

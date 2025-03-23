@@ -110,7 +110,7 @@ public class BorrowRecordController {
     @PutMapping("/borrowRecord/count/{id}")
     public String updateBorrowRecord(@PathVariable Integer id, @RequestBody BorrowRecord borrowRecord) {
         borrowRecord.setId(id);
-        int result = borrowRecordMapper.updateBorrowRecordStatus(borrowRecord);
+        int result = borrowRecordMapper.updateById(borrowRecord);
         if (result > 0) {
             // 查询当前书籍的可借数量
             Integer availableCount = bookInventoryMapper.getAvailableCountByIsbn(borrowRecord.getBookIsbn());
@@ -190,4 +190,21 @@ public class BorrowRecordController {
         }
         return borrowsByDay;
     }
+
+    @GetMapping("/borrow/publisher-label-counts/{id}")
+    public List<Map<String, Object>> countBorrowsByPublisherId(@PathVariable int id) {
+        return borrowRecordMapper.countBorrowsByPublisherId(id);
+    }
+    @GetMapping("/borrow/statisticsByDay/{id}")
+    public Map<String, Integer> getDailyBorrowSales(@PathVariable int id) {
+        List<Map<String, Object>> resultList = borrowRecordMapper.getDailySales(id);
+        Map<String, Integer> dailySales = new LinkedHashMap<>(); // 使用 LinkedHashMap 以保持插入顺序
+        for (Map<String, Object> result : resultList) {
+            String borrowDateStr = result.get("borrow_date").toString();
+            int sales = ((Number) result.get("daily_sales")).intValue();
+            dailySales.put(borrowDateStr, sales);
+        }
+        return dailySales;
+    }
 }
+

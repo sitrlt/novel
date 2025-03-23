@@ -23,6 +23,7 @@ const routes=[
     {path:'/link24',component:()=>import('./components/test/test18.vue')},
     {path:'/link25',component:()=>import('./components/test/test19.vue')},
     {path:'/link26',component:()=>import('./components/test/test20.vue')},
+    {path:'/link27',component:()=>import('./components/test/test21.vue')},
     {path:'/',name:'login',component:()=>import('./admin/login/Login.vue')},
     {path:'/forgetPassword',component:()=>import('./admin/login/forgerPassword.vue')},
     {path:'/register',component:()=>import('./admin/login/Register.vue')},

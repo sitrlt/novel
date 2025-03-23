@@ -20,7 +20,7 @@
     <el-table-column v-if="showIdInput" prop="id" label="序号" width="80" ></el-table-column>
     <el-table-column prop="reader.username" label="昵称" width="80" ></el-table-column>
     <el-table-column prop="feedbackType" label="反馈类型" width="350" header-align="center"></el-table-column>
-    <el-table-column prop="content" label="问题反馈" width="400" header-align="center"></el-table-column>
+    <el-table-column prop="content" label="问题反馈" width="400" header-align="center" fixed></el-table-column>
     <el-table-column prop="createdAtStr" label="反馈时间" width="200" header-align="center"></el-table-column>
     <el-table-column prop="status" label="状态" width="100"></el-table-column>
     <el-table-column label="操作" min-width="180">
