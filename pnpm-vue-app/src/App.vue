@@ -19,4 +19,10 @@ import HelloWorld from './components/HelloWorld.vue'
 .logo.vue:hover {
   filter: drop-shadow(0 0 2em #42b883aa);
 }
+@media (max-width: 767px) {
+  #app {
+    max-width: 100%;
+    padding: 0 10px;
+  }
+}
 </style>

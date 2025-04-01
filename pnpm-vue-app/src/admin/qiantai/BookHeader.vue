@@ -72,7 +72,7 @@ const menuData = ref([
     path: '/novel/ranking',
   },
   {
-    text: '免费',
+    text: '书库',
     path: '/novel/free',
   },
   {
@@ -150,7 +150,7 @@ const handleSearch = () => {
 .app-container {
   font-family: Arial, sans-serif;
   background-color: #f9f4f8;
-  height: 1500px;
+  height: 100%;
 }
 
 .header {

@@ -216,11 +216,9 @@ const handleSizeChange=(pagesize)=>{
 let sname = ref('')//初始化搜索框的值
 const handleSearchName = (val) => {
   if (val.length > 0) {
-    axios.get(`http://localhost:8080/borrowRecord/search`,{params:{keyword:val}}).then(response => {
+    axios.get(`http://localhost:8080/reservation/search`,{params:{keyword:val}}).then(response => {
       displayedItems.value = response.data;
       console.log(displayedItems.value)
-
-      ElMessage({type: 'success', message: '查询成功！',})
     }).catch(error => {
       console.error(error);
     });

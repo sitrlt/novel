@@ -39,6 +39,7 @@ public interface ReaderMapper extends BaseMapper<Reader> {
             @Result(property = "accountBalance", column = "account_balance"),
             @Result(property = "registrationDate", column = "registration_date"),
             @Result(property = "coverImage", column = "cover_image"),
+            @Result(property = "updatedAt", column = "updated_at"),
             @Result(column = "id", property = "interests", javaType = List.class,
                     many = @Many(select = "com.example.novel.mapper.LabelMapper.selectLabelsByReaderId"))
     })

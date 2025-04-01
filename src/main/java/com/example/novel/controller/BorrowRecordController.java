@@ -130,6 +130,20 @@ public class BorrowRecordController {
         }
     }
 
+    @PutMapping("/borrowRecord/addCount/{uid}")
+    public BorrowRecord addBorrowRecord(@PathVariable("uid") int id, @RequestBody BorrowRecord borrowRecord) {
+        BorrowRecord exist = borrowRecordMapper.selectById(id);
+        if(exist != null){
+            borrowRecord.setId(id);
+            borrowRecordMapper.updateById(borrowRecord);
+            bookInventoryMapper.creaseAvailableCount(borrowRecord.getBookIsbn());
+            return borrowRecord;
+        }else{
+            return null;
+        }
+    }
+
+
     //通过id删除信息
     @DeleteMapping("/borrowRecord/id/{id}")
     public int delBorrowRecord(@PathVariable("id") int id){

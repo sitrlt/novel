@@ -45,6 +45,10 @@ public interface BookInventoryMapper extends BaseMapper<BookInventory> {
     @Update("UPDATE book_inventory SET available_copies = available_copies - 1 WHERE book_isbn = #{bookIsbn}")
     int decreaseAvailableCount(@Param("bookIsbn") String bookIsbn);
 
+    @Update("UPDATE book_inventory SET available_copies = available_copies + 1 WHERE book_isbn = #{bookIsbn}")
+    int creaseAvailableCount(@Param("bookIsbn") String bookIsbn);
+
+
     @Select("SELECT available_copies FROM book_inventory WHERE book_isbn = #{bookIsbn}")
     Integer getAvailableCountByIsbn(@Param("bookIsbn") String bookIsbn);
 

@@ -15,4 +15,3 @@ for(let iconName in ELIcons){
     app.component(iconName,ELIcons[iconName])
 
 }
-Vue.prototype.$echarts = echarts

@@ -96,15 +96,6 @@ const dialogTitle = computed(() => {//设置弹窗的标题
 })
 const showIdInput = ref(false); // 控制显示隐藏的状态
 
-// 发送请求获取数据
-axios.get("http://localhost:8080/feedback/findAll").then((response) => {
-  members = response.data;
-  total.value =members.length;
-  displayedItems.value = members; // 更新ref变量的值\
-}).catch((error) => {
-  console.error("请求出错:", error);
-  // 处理错误，例如显示错误信息或采取其他措施
-})
 
 // 监听数据变化
 onMounted(() => {

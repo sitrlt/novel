@@ -24,6 +24,7 @@ const routes=[
     {path:'/link25',component:()=>import('./components/test/test19.vue')},
     {path:'/link26',component:()=>import('./components/test/test20.vue')},
     {path:'/link27',component:()=>import('./components/test/test21.vue')},
+    {path:'/link28',component:()=>import('./components/test/test22.vue')},
     {path:'/',name:'login',component:()=>import('./admin/login/Login.vue')},
     {path:'/forgetPassword',component:()=>import('./admin/login/forgerPassword.vue')},
     {path:'/register',component:()=>import('./admin/login/Register.vue')},
@@ -92,6 +93,11 @@ const routes=[
                 path: '/novel/free',
                 name: 'BookFree',
                 component:()=>import('./admin/qiantai/BookFree.vue')
+            },
+            {
+                path: '/novel/chapter/:id',
+                name: 'BookChapter',
+                component:()=>import('./admin/qiantai/BookChapter.vue')
             },
 
         ]

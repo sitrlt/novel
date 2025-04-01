@@ -24,6 +24,7 @@
             <el-tag v-for="tag in currentBook.labels" :key="tag.label">{{tag.label}}</el-tag>
             <el-tag v-if="currentBook.isPayable">付费:{{currentBook.borrowingFee}}元</el-tag>
             <el-tag v-else>免费</el-tag>
+            <el-tag>评分：{{totalRanking}}分</el-tag>
           </div>
           <div class="book-synopsis">
             <p>{{ currentBook.description }}</p>
@@ -82,7 +83,7 @@ const route = useRoute();
 const status = ref('待处理');
 const currentBook = ref();
 const bookId = parseInt(route.params.id);
-
+const totalRanking = ref();
 const goToLabel = () => {
   if (currentBook.value.labels[0].label === '古言') {
     router.push('/novel/ancient');
@@ -113,6 +114,7 @@ const getData = async () => {
   try {
     const response = await axios.get(`http://localhost:8080/book/findById/${bookId}`);
     currentBook.value = response.data;
+    console.log("当前书籍",currentBook.value)
     updateStatus();
     return response.data;
   } catch (error) {
@@ -133,6 +135,7 @@ onMounted(async () => {
   await getData();
   await getBookList();
   getCount();
+  getRanking()
 });
 
 const addToBorrowList = async () => {
@@ -256,7 +259,67 @@ const getCount = () => {
         console.error("请求出错:", error);
       });
 };
+const bookReviews = ref([]); // 初始化为空数组
 
+const getRanking = () => {
+  axios.get(`http://localhost:8080/bookReviews/findById/${bookId}`)
+      .then((response) => {
+        bookReviews.value = response.data;
+        console.log(bookReviews.value);
+
+        // 在数据获取成功后进行计算
+        const starCounts = countStarRatings(bookReviews.value);
+        console.log("当前", starCounts);
+        const finalRating = calculateDoubanRating(starCounts);
+        totalRanking.value = finalRating
+        console.log("最终评分", finalRating);
+      })
+      .catch((error) => {
+        console.error("请求出错:", error);
+      });
+};
+
+const countStarRatings = (reviews) => {
+  const starCounts = {
+    a: 0,  // 5星数量
+    b: 0,  // 4星数量
+    c: 0,  // 3星数量
+    d: 0,  // 2星数量
+    e: 0   // 1星数量
+  };
+  console.log(reviews.length);
+  for (let i = 0; i < reviews.length; i++) {
+    const rating = reviews[i].rating;
+    switch (rating) {
+      case 5:
+        starCounts.a++;
+        break;
+      case 4:
+        starCounts.b++;
+        break;
+      case 3:
+        starCounts.c++;
+        break;
+      case 2:
+        starCounts.d++;
+        break;
+      case 1:
+        starCounts.e++;
+        break;
+      default:
+        break;
+    }
+  }
+  return starCounts;
+};
+
+const calculateDoubanRating = (starCounts) => {
+  const { a, b, c, d, e } = starCounts;
+  const numerator = 10 * a + 8 * b + 6 * c + 4 * d + 2 * e;
+  const denominator = a + b + c + d + e;
+  const rating = denominator === 0 ? 0 : numerator / denominator;
+  return parseFloat(rating.toFixed(1));
+};
 const bookList = ref([]);
 const getBookList = async () => {
   try {
@@ -341,7 +404,15 @@ watch(currentBook, () => {
   margin: 20px 20px 0;
   border: none;
   box-shadow: 0 1px 6px rgba(0, 0, 0, .3), 0 0 5px #f9f2e9 inset;
+  transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94); /* 缓慢放大 */
+
 }
+
+.book-cover:hover {
+  transform: scale(1.1); /* 鼠标悬停时放大1.1倍，可根据需要调整比例 */
+  opacity: 0.9; /* 轻微透明（可选） */
+}
+
 
 .book-cover img {
   width: 100%;
@@ -463,7 +534,13 @@ watch(currentBook, () => {
   width: 44%;
   height: 173px;
   object-fit: cover;
+  transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94); /* 缓慢放大 */
 }
+
+.book-cover1:hover {
+  transform: scale(1.1); /* 鼠标悬停时放大1.1倍，可根据需要调整比例 */
+}
+
 
 .book-title1 {
   font-size: 16px;

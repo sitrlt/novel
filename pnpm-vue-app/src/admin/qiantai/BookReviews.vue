@@ -27,7 +27,17 @@
         </div>
         <p class="comment-content">{{ comment.reviewText }}</p>
       </div>
+
     </div>
+    <el-pagination
+        v-model:current-page="currentPage"
+        v-model:page-size="pageSize"
+        :page-sizes="[5,10,15,20]"
+        :total="total"
+        layout="sizes,prev, pager, next"
+        @current-change="handleCurrentChange"
+        @size-change="handleSizeChange"
+    />
     <!-- 评论弹窗 -->
     <el-dialog v-model="showCommentDialog" title="发布评论">
       <el-form :model="newComment" ref="commentFormRef">
@@ -53,7 +63,9 @@ import axios from "axios";
 import {useRoute} from 'vue-router';
 import {ArrowRight} from '@element-plus/icons-vue';
 import {ElMessage} from "element-plus";
-
+let currentPage = ref(1);// 定义当前页码初始值为1
+let pageSize = ref(5);// 定义每页显示的数据条数为5
+let total = ref(0);// 初始化数据总条数
 const route = useRoute();
 const currentBook = ref(null);
 const bookId = parseInt(route.params.id);
@@ -72,18 +84,36 @@ const newComment = ref({
 });
 const commentFormRef = ref(null);
 
-const getDate = () => {
-  axios.get(`http://localhost:8080/bookReviews/findById/${bookId}`)
+const getData = () => {
+  axios.get(`http://localhost:8080/bookReviews/findByPageByBookId`,{
+    params: {
+      pageNum: currentPage.value,
+      pageSize: pageSize.value,
+      bookId: bookId
+    }
+  })
       .then((response) => {
-        comments.value = response.data;
+        comments.value = response.data.records;
+        total.value = response.data.total
+        console.log(response.data)
       })
       .catch((error) => {
         console.error("请求出错:", error);
       });
 };
+//处理页码变化点击事件
+const handleCurrentChange = (pageNum) => {
+  currentPage.value = pageNum;
+  getData();
+};
+//处理每页显示多少条事件
+const handleSizeChange = (pagesize) => {
+  pageSize.value = pagesize;
+  getData();
+}
 
 onMounted(() => {
-  getDate();
+  getData();
   axios.get(`http://localhost:8080/book/findById/${bookId}`)
       .then((response) => {
         currentBook.value = response.data;
@@ -118,7 +148,7 @@ const submitComment = () => {
   axios.post("http://localhost:8080/bookReviews/create", newCommentData)
       .then((response) => {
         ElMessage({type: 'success', message: '添加成功!'});
-        getDate();
+        getData();
       })
       .catch((error) => {
         ElMessage.error('添加失败');

@@ -66,4 +66,25 @@ public interface ReservationMapper extends BaseMapper<Reservation> {
     IPage<Reservation> selectPageWithPhysicalReservation(Page<?> page, @Param("queryWrapper") Wrapper<Reservation> queryWrapper);
 
 
+    @Select("SELECT br.* " +
+            "FROM reservation br " +
+            "JOIN book b ON br.book_isbn = b.isbn " +
+            "JOIN reader r ON br.reader_id = r.id " +
+            "WHERE b.title LIKE CONCAT('%', #{keyword}, '%') " +
+            "OR r.username LIKE CONCAT('%', #{keyword}, '%')")
+    @Results({
+            @Result(property = "id", column = "id"),
+            @Result(property = "readerId", column = "reader_id"),
+            @Result(property = "bookIsbn", column = "book_isbn"),
+            @Result(property = "adminResponse", column = "admin_response"),
+            @Result(property = "status", column = "status"),
+            @Result(column = "book_isbn", property = "book", javaType = Book.class,
+                    one = @One(select = "com.example.novel.mapper.BookMapper.selectByIsbn")),
+            @Result(column = "reader_id", property = "reader", javaType = Reader.class,
+                    one = @One(select = "com.example.novel.mapper.ReaderMapper.selectById")),
+            @Result(column = "book_isbn", property = "bookInventory", javaType = BookInventory.class,
+                    one = @One(select = "com.example.novel.mapper.BookInventoryMapper.selectByBookIsbn"))
+    })
+    List<Reservation> searchReservationByKeyword(@Param("keyword") String keyword);
+
 }

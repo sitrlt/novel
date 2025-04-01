@@ -96,18 +96,19 @@
             </div>
           </div>
         <div class="bookshelf" :style="{ display: currentShelf === 'bookshelf'? 'block' : 'none' }">
-          <div class="book-item" v-for="(book, index) in books" :key="index">
+          <div class="book-item" v-for="(book, index) in books" :key="index" >
           <input type="checkbox" class="checkbox">
           <div class="book-cover">
             <img :src="book.book.coverImage" alt="Book Cover" class="cover-img">
           </div>
-          <div class="book-details">
-            <div class="book-title">{{ book.book.title }}
-            <el-tag v-if="book.book.isPayable">付费</el-tag>
+            <div class="book-details" @click="book.status !== '已归还' ? goToBookDetail(book.book.id) : null"
+                 :class="{'disabled': book.status === '已归还'}">
+              <div class="book-title">{{ book.book.title }}
+                <el-tag v-if="book.book.isPayable">付费</el-tag>
+              </div>
+              <div class="book-author">{{ book.book.author }}</div>
+              <div class="book-read-status">{{ getStatus(book) }}</div>
             </div>
-            <div class="book-author">{{ book.book.author }}</div>
-            <div class="book-read-status">{{getStatus(book) }}</div>
-          </div>
           <button class="return-button" :disabled="book.status === '已归还'" @click="returnBook(index)">归还
           </button>
           <div >
@@ -154,16 +155,16 @@
         <div class="message-header">
           <span :class="{ 'active-tab': currentTab === '系统消息' }" @click="changeTab('系统消息')">系统消息</span>
           <span :class="{ 'active-tab': currentTab === '活动通知' }" @click="changeTab('活动通知')">活动通知</span>
+          <span :class="{ 'active-tab': currentTab === '消费记录' }" @click="changeTab('消费记录')">消费记录</span>
           <button class="clear-button" @click="clearMessages">清空</button>
         </div>
         <div class="message-list" v-if="currentTab === '系统消息'">
           <div v-if="messages.length > 0" v-for="(message, index) in messages" :key="index" >
             <div class="message-item" v-if="message.status === '已处理'">
-            <div class="message-icon">
-              <span><Star/></span>
-            </div>
+
             <div class="message-content">
-              <span class="message-title">{{ message.targetEntity === 'admin'? '管理员反馈通知' : '出版社反馈通知' }}</span>
+              <span class="message-title"><div class="message-icon"><span><Star/></span></div>
+                {{ message.targetEntity === 'admin'? '管理员反馈通知' : '出版社反馈通知' }}</span>
               <span class="message-time">{{ message.responseDate }}</span>
             </div>
               <div class="message-text-wrapper">
@@ -175,11 +176,10 @@
           </div>
           <div v-if="reservationMessages.length > 0" v-for="(reservation, index) in reservationMessages" :key="index">
             <div class="message-item" v-if="reservation.status === '已处理'">
-              <div class="message-icon">
-                <span><Calendar/></span> <!-- 假设日历图标组件 -->
-              </div>
+
               <div class="message-content">
-                <span class="message-title">预约成功通知  </span>
+                <span class="message-title"><div class="message-icon"><span><Calendar/></span></div>
+                  预约成功通知  </span>
                 <span style="margin-left: 13px"></span>
                 <span class="message-time" >{{ reservation.reserveDateStr }}</span> <!-- 假设的预约日期字段 -->
               </div>
@@ -188,6 +188,7 @@
               </div>
             </div>
           </div>
+
           <div v-else-if="messages.length === 0 && reservationMessages.length === 0" class="empty-message">
             <img src="https://cdn-icons-png.flaticon.com/512/261/261563.png" alt="empty-icon"
                  style="width: 80px; height: 80px; margin-bottom: 10px;">
@@ -210,14 +211,36 @@
             </template>
           </el-dialog>
         </div>
+        <div class="message-list" v-if="currentTab === '消费记录'">
+          <div v-if="consumption.length > 0" v-for="(cs, index) in consumption" :key="index" >
+            <div class="message-item" v-if="cs.borrowingFee>0">
+
+              <div class="message-content">
+                <span class="message-title"><div class="message-icon"><span><Star/></span></div>
+                  {{ cs.book.title }}</span>
+                <span class="message-time">{{ cs.borrowDate }}</span>
+              </div>
+              <div class="message-text-wrapper">
+                <p class="message-text">消费金额：{{cs.borrowingFee}}元</p>
+              </div>
+            </div>
+          </div>
+
+          <div v-else-if="consumption.length === 0" class="empty-message">
+            <img src="https://cdn-icons-png.flaticon.com/512/261/261563.png" alt="empty-icon"
+                 style="width: 80px; height: 80px; margin-bottom: 10px;">
+            <p>还没有任何消息哦</p>
+          </div>
+          <div class="consumption">
+            <span>累计消费金额：{{totalConsumption}}元</span>
+          </div>
+        </div>
         <div class="message-list" v-if="currentTab === '活动通知'">
           <div v-if="participationMessages.length > 0" v-for="(participationMessage, index) in participationMessages" :key="index" >
             <div class="message-item" v-if="participationMessage.participationStatus === '已报名'">
-              <div class="message-icon">
-                <span><Star/></span>
-              </div>
               <div class="message-content">
-                <span class="message-title">{{ participationMessage.activity.activityName }}</span>
+                <span class="message-title"><div class="message-icon"><span><Star/></span></div>
+                  {{ participationMessage.activity.activityName }}</span>
                 <span class="message-time">{{ participationMessage.participationTimeStr }}</span>
               </div>
               <div class="message-text-wrapper">
@@ -361,6 +384,7 @@
               <span v-if="!isEditing.accountBalance">{{ reader.accountBalance }}元</span>
               <span class="edit-span" v-if="hoveredItem === 'accountBalance' && !isEditing.accountBalance"
                     @click="openRechargeDialog"><Edit/>充值</span>
+              
               <!-- 充值弹窗 -->
               <el-dialog
                   v-model="rechargeDialogVisible"
@@ -490,8 +514,8 @@
           <p>还没有任何评论哦</p>
         </div>
         <el-pagination
-            @size-change="handleSizeChange"
-            @current-change="handleCurrentChange"
+            @size-change="handleReviewsSizeChange"
+            @current-change="handleReviewsCurrentChange"
             :current-page="currentPageReviews"
             :page-sizes="[2, 4, 5]"
             :page-size="pageSizeReviews"
@@ -521,6 +545,8 @@ import {
   Star, Sunny
 } from '@element-plus/icons-vue';
 import {ElMessage, ElMessageBox} from "element-plus";
+import { useRouter } from 'vue-router';
+
 
 const currentView = ref('bookshelf');
 const bookCount = ref();
@@ -535,6 +561,9 @@ const pageSize = ref(5); // 每页数量
 const pageSizeReviews = ref(2)
 const total = ref(0); // 总记录数
 const totalReviews = ref(0)
+const totalConsumption = ref()
+const router = useRouter();
+
 function getUserIdFromSessionStorage() {
   const role ='reader'; // 假设读者角色标识为'reader'
   const storageKey = `sessionUserId_${role}`;
@@ -551,26 +580,14 @@ if (id) {
   console.log('未获取到用户 ID，可能用户未登录或会话已过期');
 }
 const isOverdueDialogVisible = ref(false);
-const getData = () => {
-  axios.get(`http://localhost:8080/borrowRecord/findById/${id}`)
-      .then((response) => {
-        books.value = response.data;
-        console.log(books.value)
-        bookCount.value = books.value.length
-        // 遍历 books 数组，检查 borrowRecord 的状态
-        for (const book of books.value) {
-          if (book.borrowRecord && book.borrowRecord.status === '已逾期') {
-            isOverdueDialogVisible.value = true;
-            break; // 找到一个逾期记录就跳出循环
-          }
-        }
-      })
-      .catch((error) => {
-        console.error("请求出错:", error);
-        // 处理错误，例如显示错误信息或采取其他措施
-      });
 
-}
+
+//书籍内容
+const goToBookDetail = (bookId) => {
+  router.push({name: 'BookChapter', params: {id: bookId}});
+};
+
+
 const showBookshelf = () => {
   currentView.value = 'bookshelf';
 };
@@ -589,14 +606,31 @@ const showProblem = () => {
 }
 onMounted(async () => {
   console.log(id)
+  await fetchNovels();
   getReader();
- await getData()
   getLabel()
   fetchReservationBooks()
   fetchAllMessages();
-  fetchNovels();
   fetchReviews()
+  getConsumption()
 });
+
+const consumption = ref();
+
+const getConsumption = () => {
+  axios.get(`http://localhost:8080/borrowRecord/findById/${id}`)
+      .then((response) => {
+        consumption.value = response.data;
+        console.log("消费记录：",consumption.value)
+        totalConsumption.value = consumption.value.reduce((acc, item) => acc + (item.borrowingFee || 0), 0);
+        console.log("消费总和：",totalConsumption.value)
+      })
+      .catch((error) => {
+        console.error("请求出错:", error);
+        // 处理错误，例如显示错误信息或采取其他措施
+      });
+}
+
 
 const getReader = () => {
   axios.get(`http://localhost:8080/reader/findById/${id}`)
@@ -834,7 +868,7 @@ const handleCoverChange = (file) => {
       axios.put(`http://localhost:8080/reader/uid/${reader.value.id}`, reader.value)
           .then((response) => {
             ElMessage({type: 'success', message: '修改成功!'});
-            getData(); // 重新获取数据
+            fetchNovels(); // 重新获取数据
           })
           .catch((error) => {
             ElMessage.error('修改失败');
@@ -866,7 +900,7 @@ const returnBook = (index) => {
       type: 'warning'
     }).then(() => {
       const updatedBorrowRecord = {...book, status: '已归还', returnDate: getCurrentDate()};
-      axios.put(`http://localhost:8080/borrowRecord/uid/${book.id}`, updatedBorrowRecord)
+      axios.put(`http://localhost:8080/borrowRecord/addCount/${book.id}`, updatedBorrowRecord)
           .then((response) => {
             ElMessage({
               type: 'success',
@@ -1009,9 +1043,9 @@ const fetchAllMessages = () => {
   const feedbackRequest = axios.get(`http://localhost:8080/feedback/findById/${id}`);
   const reservationRequest = axios.get(`http://localhost:8080/reservation/findById/${id}`);
   const participationRequest = axios.get(`http://localhost:8080/participation/findById/${id}`)
-  const bookReviewsRequest = axios.get(`http://localhost:8080/bookReviews/search/${id}`)
-  Promise.all([feedbackRequest, reservationRequest,participationRequest,bookReviewsRequest])
-      .then(([feedbackResponse, reservationResponse,participationResponse,bookReviewsResponse]) => {
+ /* const bookReviewsRequest = axios.get(`http://localhost:8080/bookReviews/search/${id}`)*/
+  Promise.all([feedbackRequest, reservationRequest,participationRequest])
+      .then(([feedbackResponse, reservationResponse,participationResponse]) => {
         messages.value = feedbackResponse.data;
         reservationMessages.value = reservationResponse.data;
         participationMessages.value = participationResponse.data;
@@ -1019,7 +1053,6 @@ const fetchAllMessages = () => {
         console.log('反馈消息响应:', feedbackResponse);
         console.log('预约消息响应:', reservationResponse);
         console.log('活动消息响应:', participationResponse);
-        console.log('评论消息响应:', bookReviewsResponse);
       })
       .catch((error) => {
         console.error("请求出错:", error);
@@ -1110,6 +1143,14 @@ const fetchNovels = async () => {
     }).then(response => {
       books.value = response.data.records;
       total.value = response.data.total;
+      bookCount.value = books.value.length
+      // 遍历 books 数组，检查 borrowRecord 的状态
+      for (const book of books.value) {
+        if (book.borrowRecord && book.borrowRecord.status === '已逾期') {
+          isOverdueDialogVisible.value = true;
+          break; // 找到一个逾期记录就跳出循环
+        }
+      }
       console.log(books);
     }).catch(error => {
       console.error(error);
@@ -1123,19 +1164,26 @@ const fetchNovels = async () => {
 // 每页数量变化时的处理函数
 const handleSizeChange = (newSize) => {
   pageSize.value = newSize;
-  pageSizeReviews.value = newSize
   currentPage.value = 1; // 每页数量变化时，重置页码为 1
-  currentPageReviews.value = 1;
   fetchNovels();
-  fetchReviews()
 };
+
+const handleReviewsSizeChange = (newSize) => {
+  pageSizeReviews.value = newSize
+  currentPageReviews.value = 1;
+  fetchReviews()
+}
+
+const handleReviewsCurrentChange = (newPage) => {
+  currentPageReviews.value = newPage
+  fetchReviews();
+
+}
 
 // 当前页码变化时的处理函数
 const handleCurrentChange = (newPage) => {
   currentPage.value = newPage;
-  currentPageReviews.value = newPage
   fetchNovels();
-  fetchReviews();
 };
 const fetchReviews = () => {
   try {
@@ -1172,7 +1220,7 @@ const rechargeOptions = [6, 18, 50, 198, 618];
 const selectedOption = ref(null);
 
 // 是否显示自定义金额输入框
-const showCustomInput = ref(false);
+let showCustomInput = ref(false);
 
 // 自定义金额
 const customAmount = ref('');
@@ -1547,9 +1595,9 @@ const confirmRecharge = () => {
 }
 
 .message-content {
-  display: inline-block;
-  vertical-align: top;
-  width: calc(100% - 30px);
+  justify-content: space-between;
+  display: flex;
+  align-items: center;
 }
 
 .message-title {
@@ -1557,7 +1605,6 @@ const confirmRecharge = () => {
 }
 
 .message-time {
-  margin-left: 640px;
   color: #999;
 }
 
@@ -1720,5 +1767,16 @@ const confirmRecharge = () => {
 .price{
   text-align: center;
 }
+.consumption{
+  margin-top: 20px;
 
+}
+.consumption span{
+  margin-left: 700px;
+}
+
+.disabled {
+  pointer-events: none; /* 禁止鼠标事件 */
+  opacity: 0.5; /* 可选：让元素看起来不可用 */
+}
 </style>

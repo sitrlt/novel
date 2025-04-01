@@ -57,8 +57,7 @@ function getRandomAvatar(avatars) {
   return 'http://localhost:8080/uploads/avatars/' + avatars[index]; // 假设图片放在public/assets/avatars目录下
 }
 
-// 假设图片放在public/assets/avatars目录下
-const avatarFiles = ['img.png', 'img1.png', 'img2.png','img3.jpg']; // 这里填写你的图片文件名
+const avatarFiles = ['img.png', 'img1.png', 'img2.png','img3.jpg'];
 const coverImage = ref(getRandomAvatar(avatarFiles));
 const password = ref('');
 const phone = ref('');

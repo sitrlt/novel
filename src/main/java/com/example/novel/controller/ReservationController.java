@@ -71,4 +71,8 @@ public class ReservationController {
         }
     }
 
+    @GetMapping("/reservation/search")
+    public List<Reservation> searchBorrowRecords(@RequestParam("keyword") String keyword) {
+        return reservationMapper.searchReservationByKeyword(keyword);
+    }
 }

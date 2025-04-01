@@ -25,11 +25,21 @@ public class Reader {
    private List<Book> books; // Publisher 对象
    @TableField(exist = false)
    private List<Label> interests;
+   @TableField("updated_at")
+   private java.sql.Timestamp updatedAt;
    // 自定义 getter 方法，将 Timestamp 转换为日期字符串
    public String getRegistrationDateStr() {
       if (registrationDate != null) {
          SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
          return sdf.format(registrationDate);
+      }
+      return null;
+   }
+   // 自定义 getter 方法，将 Timestamp 转换为日期字符串
+   public String getUpdatedAtStr() {
+      if (updatedAt != null) {
+         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+         return sdf.format(updatedAt);
       }
       return null;
    }

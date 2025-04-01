@@ -450,12 +450,19 @@ const checkReaderInterests = async () => {
   width: 80px;
   height: 120px;
   margin-right: 10px;
+  overflow: hidden; /* 确保放大时不会超出容器 */
 }
 
 .book-cover {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94); /* 缓慢放大 */
+}
+
+.book-cover:hover {
+  transform: scale(1.1); /* 鼠标悬停时放大1.1倍，可根据需要调整比例 */
+  opacity: 0.9; /* 轻微透明（可选） */
 }
 
 .book-details {
